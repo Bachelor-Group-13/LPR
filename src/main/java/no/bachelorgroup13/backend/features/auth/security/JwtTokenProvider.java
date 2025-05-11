@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import no.bachelorgroup13.backend.common.config.JwtConfig;
 import no.bachelorgroup13.backend.features.user.entity.User;
 import no.bachelorgroup13.backend.features.user.repository.UserRepository;
-
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -89,8 +88,10 @@ public class JwtTokenProvider {
         String username = claims.getSubject();
         UUID id = UUID.fromString(claims.get("id", String.class));
 
-        User user = userRepository.findByEmail(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+        User user =
+                userRepository
+                        .findByEmail(username)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
         CustomUserDetails principal = new CustomUserDetails(id, username, "", true, user.getRole());
 
