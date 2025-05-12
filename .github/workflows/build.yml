@@ -1,0 +1,36 @@
+name: Build and Push to GHCR
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository }}
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          docker build -t $IMAGE_ID:latest .
+
+      - name: Push image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository }}
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          docker push $IMAGE_ID:latest
+
+      - name: Trigger deployment
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.CR_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/<brukernavn>/deployment-orchestrator/actions/workflows/deploy.yml/dispatches \
+            -d '{"ref":"main"}'
