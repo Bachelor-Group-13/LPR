@@ -1,13 +1,16 @@
-FROM maven:3.9.4-eclipse-temurin-21
-
+FROM maven:3.9.4-eclipse-temurin-21 AS builder
 WORKDIR /app
 
 COPY . .
+RUN chmod +x ./mvnw \
+ && ./mvnw clean package -DskipTests
 
-RUN chmod +x ./mvnw
+FROM eclipse-temurin:21-jre
+WORKDIR /app
 
-RUN ./mvnw dependency:resolve
+COPY --from=builder /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-CMD ["./mvnw", "spring-boot:run"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
