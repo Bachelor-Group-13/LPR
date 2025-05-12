@@ -32,5 +32,5 @@ jobs:
           curl -X POST \
             -H "Authorization: token ${{ secrets.CR_PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/<brukernavn>/deployment-orchestrator/actions/workflows/deploy.yml/dispatches \
+            https://api.github.com/repos/Bachelor-Group-13/deployment-orchestrator/actions/workflows/deploy.yml/dispatches \
             -d '{"ref":"main"}'
