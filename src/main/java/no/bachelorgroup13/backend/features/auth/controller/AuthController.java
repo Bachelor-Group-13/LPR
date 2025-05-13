@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "Auth", description = "Authentication and authorization endpoints")
 public class AuthController {
+
     private final AuthService authService;
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -41,7 +42,6 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> authenticateUser(
             @Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
-
         Authentication authentication =
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
@@ -62,7 +62,7 @@ public class AuthController {
 
         User user =
                 userRepository
-                        .findByEmail(userDetails.getUsername())
+                        .findByEmailIgnoreCase(userDetails.getUsername())
                         .orElseThrow(() -> new RuntimeException("User not found"));
 
         return ResponseEntity.ok(
