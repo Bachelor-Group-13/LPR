@@ -27,39 +27,42 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+    private static final Logger log = LoggerFactory.getLogger(
+        AuthService.class
+    );
 
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
         try {
-            User user =
-                    userRepository
-                            .findByEmail(loginRequest.getEmail())
-                            .orElseThrow(() -> new RuntimeException("User not found"));
+            String rawEmail = loginRequest.getEmail().toLowerCase();
+            User user = userRepository
+                .findByEmail(rawEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-            log.info("Found user: {}", user.getEmail());
-            log.info("User enabled: {}", user.getEnabled());
-            log.info("User role: {}", user.getRole());
-            log.info("Stored password hash: {}", user.getPassword());
-            log.info("Input password length: {}", loginRequest.getPassword().length());
-            log.info(
-                    "Password matches: {}",
-                    encoder.matches(loginRequest.getPassword(), user.getPassword()));
-
-            // Try to encode the input password to see if it matches the stored format
             String encodedInput = encoder.encode(loginRequest.getPassword());
             log.info("Encoded input password: {}", encodedInput);
 
-            Authentication authentication =
-                    authenticationManager.authenticate(
-                            new UsernamePasswordAuthenticationToken(
-                                    loginRequest.getEmail(), loginRequest.getPassword()));
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    rawEmail,
+                    loginRequest.getPassword()
+                )
+            );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext()
+                .setAuthentication(authentication);
             String jwt = jwtTokenProvider.generateToken(authentication);
-            String refreshToken = jwtTokenProvider.generateRefreshToken(loginRequest.getEmail());
+            String refreshToken = jwtTokenProvider.generateRefreshToken(
+                loginRequest.getEmail()
+            );
 
             return new JwtResponse(
-                    jwt, "Bearer", user.getId(), user.getEmail(), user.getName(), refreshToken);
+                jwt,
+                "Bearer",
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                refreshToken
+            );
         } catch (AuthenticationException e) {
             log.error("Authentication failed: {}", e.getMessage(), e);
             throw e;
@@ -74,13 +77,14 @@ public class AuthService {
         // Create new user's account
         User user = new User();
         user.setId(UUID.randomUUID());
-        user.setEmail(signUpRequest.getEmail());
+        user.setEmail(signUpRequest.getEmail().toLowerCase());
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
         user.setName(signUpRequest.getName());
         user.setLicensePlate(
-                signUpRequest.getLicensePlate() != null
-                        ? signUpRequest.getLicensePlate().toUpperCase()
-                        : null);
+            signUpRequest.getLicensePlate() != null
+                ? signUpRequest.getLicensePlate().toUpperCase()
+                : null
+        );
         user.setPhoneNumber(signUpRequest.getPhoneNumber());
         user.setEnabled(true);
 
@@ -91,7 +95,9 @@ public class AuthService {
 
     public String refreshToken(String refreshToken) {
         if (jwtTokenProvider.validateToken(refreshToken)) {
-            String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
+            String username = jwtTokenProvider.getUsernameFromToken(
+                refreshToken
+            );
             return jwtTokenProvider.generateTokenWithUsername(username);
         }
         throw new RuntimeException("Invalid refresh token");
