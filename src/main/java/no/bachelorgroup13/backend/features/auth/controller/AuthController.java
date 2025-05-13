@@ -62,7 +62,7 @@ public class AuthController {
 
         User user =
                 userRepository
-                        .findByEmailIgnoreCase(userDetails.getUsername())
+                        .findByEmail(userDetails.getUsername())
                         .orElseThrow(() -> new RuntimeException("User not found"));
 
         return ResponseEntity.ok(
