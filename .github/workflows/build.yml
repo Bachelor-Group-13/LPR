@@ -35,4 +35,4 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: token $DEPLOY_TOKEN" \
             https://api.github.com/repos/Bachelor-Group-13/inneparkert-deployment/actions/workflows/deploy.yml/dispatches \
-            -d '{"ref":"main"}'
+            -d '{"ref":"main","inputs":{"service":"backend"}}'
