@@ -20,34 +20,27 @@ import org.springframework.stereotype.Service;
 public class PushServiceWrapper {
     private static final Logger logger = LoggerFactory.getLogger(PushServiceWrapper.class);
 
-    @Value("${vapid.keys.public}")
-    private String publicKey;
-
-    @Value("${vapid.keys.private}")
-    private String privateKey;
-
-    private PushService pushService;
-
-    @PostConstruct
-    public void init() {
-        try {
-            String safePublicKey =
-                    publicKey.replace('+', '-').replace('/', '_').replaceAll("=+$", "");
-            String safePrivateKey =
-                    privateKey.replace('+', '-').replace('/', '_').replaceAll("=+$", "");
-
-            pushService = new PushService(safePublicKey, safePrivateKey);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize push service", e);
-        }
-    }
+    private final PushService pushService;
 
     public PushServiceWrapper(
             @Value("${vapid.keys.public}") String publicKey,
             @Value("${vapid.keys.private}") String privateKey)
             throws GeneralSecurityException {
+
         Security.addProvider(new BouncyCastleProvider());
-        this.pushService = new PushService(publicKey, privateKey);
+
+        String safePublicKey = publicKey
+                .replace('+','-')
+                .replace('/','_')
+                .replaceAll("=+$", "");
+
+        String safePrivateKey = privateKey
+                .replace('+','-')
+                .replace('/','_')
+                .replaceAll("=+$", "");
+
+        logger.info("Initializing PushService with VAPID public key: {}…", safePublicKey.substring(0, 10));
+        this.pushService = new PushService(safePublicKey, safePrivateKey);
     }
 
     public void sendPush(PushNotifications sub, String title, String body)
