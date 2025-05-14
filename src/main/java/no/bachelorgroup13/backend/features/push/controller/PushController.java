@@ -2,11 +2,15 @@ package no.bachelorgroup13.backend.features.push.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
 import no.bachelorgroup13.backend.features.push.dto.PushSubscriptionDto;
 import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
 import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+import no.bachelorgroup13.backend.features.push.service.PushServiceWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,12 +29,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class PushController {
     private final Logger logger = LoggerFactory.getLogger(PushController.class);
     private final PushSubscriptionRepository repository;
+    private final PushServiceWrapper pushServiceWrapper;
 
     @Value("${vapid.keys.public}")
     private String vapidPublicKey;
 
-    public PushController(PushSubscriptionRepository repository) {
+    public PushController(
+            PushSubscriptionRepository repository, PushServiceWrapper pushServiceWrapper) {
         this.repository = repository;
+        this.pushServiceWrapper = pushServiceWrapper;
     }
 
     @Operation(summary = "Get VAPID public key")
@@ -86,5 +93,26 @@ public class PushController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error saving subscription: " + e.getMessage());
         }
+    }
+
+    @Operation(summary = "Server-side push smoke test")
+    @GetMapping("/test")
+    public ResponseEntity<Map<String, Integer>> testPush(Authentication auth) {
+        UUID userId = ((CustomUserDetails) auth.getPrincipal()).getId();
+        List<PushNotifications> subs = repository.findAllByUserId(userId);
+        logger.info("TEST PUSH: found {} subscriptions for user {}", subs.size(), userId);
+        subs.forEach(
+                sub -> {
+                    try {
+                        pushServiceWrapper.sendPush(
+                                sub,
+                                "🅿️ Parking Manager Test",
+                                "If you see this, server-side works!");
+                    } catch (Exception e) {
+                        logger.error(
+                                "Test push failed for {}: {}", sub.getEndpoint(), e.getMessage());
+                    }
+                });
+        return ResponseEntity.ok(Map.of("sent", subs.size()));
     }
 }
