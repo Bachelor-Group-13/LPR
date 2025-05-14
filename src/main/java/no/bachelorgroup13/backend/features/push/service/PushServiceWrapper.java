@@ -9,12 +9,17 @@ import java.util.Map;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
+import org.apache.http.HttpResponse;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PushServiceWrapper {
+    private static final Logger logger = LoggerFactory.getLogger(PushServiceWrapper.class);
+
     @Value("${vapid.keys.public}")
     private String publicKey;
 
@@ -52,8 +57,17 @@ public class PushServiceWrapper {
                 new Notification(sub.getEndpoint(), sub.getP256dh(), sub.getAuth(), payload);
 
         try {
-            pushService.send(notification);
+            logger.info(
+                    "Sending push → endpoint: {}  payload: {}…",
+                    sub.getEndpoint(),
+                    payload.substring(0, Math.min(payload.length(), 50)));
+            HttpResponse response = pushService.send(notification);
+            logger.info(
+                    "FCM response status: {} {}",
+                    response.getStatusLine().getStatusCode(),
+                    response.getStatusLine().getReasonPhrase());
         } catch (Exception e) {
+            logger.error("Failed to send push to {}:", sub.getEndpoint(), e);
             throw new RuntimeException("Failed to send push notification", e);
         }
     }
