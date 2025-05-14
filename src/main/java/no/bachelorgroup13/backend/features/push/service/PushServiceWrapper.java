@@ -53,22 +53,30 @@ public class PushServiceWrapper {
     public void sendPush(PushNotifications sub, String title, String body)
             throws GeneralSecurityException, IOException {
         String payload = new Gson().toJson(Map.of("title", title, "body", body));
+
+        String userKey = sub.getP256dh()
+                .replace('+','-')
+                .replace('/','_')
+                .replaceAll("=+$", "");
+        String authSecret = sub.getAuth()
+                .replace('+','-')
+                .replace('/','_')
+                .replaceAll("=+$", "");
+
         Notification notification =
-                new Notification(sub.getEndpoint(), sub.getP256dh(), sub.getAuth(), payload);
+                new Notification(sub.getEndpoint(), userKey, authSecret, payload);
 
         try {
-            logger.info(
-                    "Sending push → endpoint: {}  payload: {}…",
-                    sub.getEndpoint(),
-                    payload.substring(0, Math.min(payload.length(), 50)));
+            logger.info("Sending push → endpoint: {}  payload: {}…",
+                    sub.getEndpoint(), payload.substring(0, Math.min(payload.length(), 50)));
             HttpResponse response = pushService.send(notification);
-            logger.info(
-                    "FCM response status: {} {}",
+            logger.info("FCM response status: {} {}",
                     response.getStatusLine().getStatusCode(),
                     response.getStatusLine().getReasonPhrase());
         } catch (Exception e) {
             logger.error("Failed to send push to {}:", sub.getEndpoint(), e);
-            throw new RuntimeException("Failed to send push notification", e);
+            throw new RuntimeException(e);
         }
     }
+
 }
