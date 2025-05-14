@@ -26,7 +26,7 @@ public class PushController {
     private final Logger logger = LoggerFactory.getLogger(PushController.class);
     private final PushSubscriptionRepository repository;
 
-    @Value("${push.vapid.publicKey}")
+    @Value("${vapid.keys.public}")
     private String vapidPublicKey;
 
     public PushController(PushSubscriptionRepository repository) {

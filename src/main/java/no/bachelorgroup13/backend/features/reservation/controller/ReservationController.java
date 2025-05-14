@@ -152,12 +152,17 @@ public class ReservationController {
                 .forEach(
                         sub -> {
                             try {
-                                String title = isParkedIn
-                                        ? "You've been parked in!"
-                                        : "Spot " + reservation.getSpotNumber() + " reserved!";
-                                String body = isParkedIn
-                                        ? "Someone has parked in front of your car in spot " + reservation.getSpotNumber()
-                                        : "Check if you parked in someone";
+                                String title =
+                                        isParkedIn
+                                                ? "You've been parked in!"
+                                                : "Spot "
+                                                        + reservation.getSpotNumber()
+                                                        + " reserved!";
+                                String body =
+                                        isParkedIn
+                                                ? "Someone has parked in front of your car in spot "
+                                                        + reservation.getSpotNumber()
+                                                : "Check if you parked in someone";
                                 pushService.sendPush(sub, title, body);
                             } catch (IOException | GeneralSecurityException e) {
                                 log.error("Failed to send push notification to subscription", e);
@@ -177,23 +182,35 @@ public class ReservationController {
                             reservation.setId(id);
 
                             boolean isBSpot = reservation.getSpotNumber().endsWith("B");
-                            boolean isBeingOccupied = reservation.getBlockedSpot();
 
-                            if (isBSpot && isBeingOccupied) {
-                                String rowNumber = reservation.getSpotNumber().substring(0, reservation.getSpotNumber().length() - 1);
+                            if (isBSpot && reservation.getLicensePlate() != null) {
+                                reservation.setBlockedSpot(true);
+
+                                String rowNumber =
+                                        reservation
+                                                .getSpotNumber()
+                                                .substring(
+                                                        0,
+                                                        reservation.getSpotNumber().length() - 1);
                                 String aSpotNumber = rowNumber + "A";
 
-                                reservationService.getReservationsBySpotNumber(aSpotNumber)
-                                        .stream()
+                                reservationService.getReservationsBySpotNumber(aSpotNumber).stream()
                                         .filter(r -> !r.getAnonymous() && r.getUserId() != null)
                                         .findFirst()
-                                        .ifPresent(aSpotReservation -> {
-                                            try {
-                                                sendPushNotification(aSpotReservation, true);
-                                            } catch (Exception e) {
-                                                log.error("Failed to send parked-in notification", e);
-                                            }
-                                        });
+                                        .ifPresent(
+                                                aSpotReservation -> {
+                                                    try {
+                                                        sendPushNotification(
+                                                                aSpotReservation, true);
+                                                    } catch (Exception e) {
+                                                        log.error(
+                                                                "Failed to send parked-in"
+                                                                        + " notification",
+                                                                e);
+                                                    }
+                                                });
+                            } else {
+                                reservation.setBlockedSpot(false);
                             }
 
                             Reservation updated = reservationService.updateReservation(reservation);
