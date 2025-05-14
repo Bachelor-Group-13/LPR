@@ -35,6 +35,10 @@ public class ReservationService {
         return reservationRepository.findByLicensePlate(licensePlate);
     }
 
+    public List<Reservation> getReservationsBySpotNumber(String spotNumber) {
+        return reservationRepository.findBySpotNumber(spotNumber);
+    }
+
     @Transactional
     public Reservation createReservation(Reservation reservation) {
         if (reservation.getAnonymous() == null) {
