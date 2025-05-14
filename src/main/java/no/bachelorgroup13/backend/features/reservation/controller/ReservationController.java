@@ -123,7 +123,7 @@ public class ReservationController {
             // Send push notification for non-anonymous reservations
             if (!reservationDto.isAnonymous() && reservationDto.getUserId() != null) {
                 try {
-                    sendPushNotification(saved);
+                    sendPushNotification(saved, false);
                 } catch (Exception e) {
                     log.error("Failed to send push notification", e);
                 }
@@ -146,16 +146,19 @@ public class ReservationController {
     }
 
     @Operation(summary = "Send push notification")
-    private void sendPushNotification(Reservation reservation) {
+    private void sendPushNotification(Reservation reservation, boolean isParkedIn) {
         pushRepository
                 .findAllByUserId(reservation.getUserId())
                 .forEach(
                         sub -> {
                             try {
-                                pushService.sendPush(
-                                        sub,
-                                        "Spot " + reservation.getSpotNumber() + " reserved!",
-                                        "Check if you parked in someone");
+                                String title = isParkedIn
+                                        ? "You've been parked in!"
+                                        : "Spot " + reservation.getSpotNumber() + " reserved!";
+                                String body = isParkedIn
+                                        ? "Someone has parked in front of your car in spot " + reservation.getSpotNumber()
+                                        : "Check if you parked in someone";
+                                pushService.sendPush(sub, title, body);
                             } catch (IOException | GeneralSecurityException e) {
                                 log.error("Failed to send push notification to subscription", e);
                             }
@@ -172,6 +175,27 @@ public class ReservationController {
                         existingReservation -> {
                             Reservation reservation = reservationMapper.toEntity(reservationDto);
                             reservation.setId(id);
+
+                            boolean isBSpot = reservation.getSpotNumber().endsWith("B");
+                            boolean isBeingOccupied = reservation.getBlockedSpot();
+
+                            if (isBSpot && isBeingOccupied) {
+                                String rowNumber = reservation.getSpotNumber().substring(0, reservation.getSpotNumber().length() - 1);
+                                String aSpotNumber = rowNumber + "A";
+
+                                reservationService.getReservationsBySpotNumber(aSpotNumber)
+                                        .stream()
+                                        .filter(r -> !r.getAnonymous() && r.getUserId() != null)
+                                        .findFirst()
+                                        .ifPresent(aSpotReservation -> {
+                                            try {
+                                                sendPushNotification(aSpotReservation, true);
+                                            } catch (Exception e) {
+                                                log.error("Failed to send parked-in notification", e);
+                                            }
+                                        });
+                            }
+
                             Reservation updated = reservationService.updateReservation(reservation);
                             return ResponseEntity.ok(reservationMapper.toDto(updated));
                         })
