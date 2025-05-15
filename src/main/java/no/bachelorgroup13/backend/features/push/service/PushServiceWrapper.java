@@ -2,6 +2,7 @@ package no.bachelorgroup13.backend.features.push.service;
 
 import com.google.firebase.messaging.*;
 import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
+import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,11 @@ import java.util.Map;
 @Service
 public class PushServiceWrapper {
     private static final Logger logger = LoggerFactory.getLogger(PushServiceWrapper.class);
+    private final PushSubscriptionRepository pushSubscriptionRepository;
+
+    public PushServiceWrapper(PushSubscriptionRepository pushSubscriptionRepository) {
+        this.pushSubscriptionRepository = pushSubscriptionRepository;
+    }
 
     public void sendPush(PushNotifications sub, String title, String body) {
         logger.info("PushServiceWrapper received subscription object:");
@@ -36,8 +42,11 @@ public class PushServiceWrapper {
                     .build();
 
             String endpoint = sub.getEndpoint();
+            if (!endpoint.contains("/fcm/send/")) {
+                logger.error("Invalid FCM endpoint format: {}", endpoint);
+                return;
+            }
             String fcmToken = endpoint.substring(endpoint.lastIndexOf("/") + 1);
-
             logger.info("Extracted FCM token: {}", fcmToken);
 
             Message message = Message.builder()
@@ -53,8 +62,21 @@ public class PushServiceWrapper {
 
         } catch (FirebaseMessagingException e) {
             logger.error("Failed to send push message via FCM to endpoint: {}", sub.getEndpoint(), e);
-            if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED) {
+            if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
+                    e.getMessage().contains("NOT_FOUND") ||
+                    e.getMessage().contains("UNREGISTERED")) {
+
                 logger.warn("Subscription expired or invalid, removing from database: {}", sub.getEndpoint());
+
+                // Delete the invalid subscription
+                if (pushSubscriptionRepository != null && sub.getId() != null) {
+                    try {
+                        pushSubscriptionRepository.deleteById(sub.getId());
+                        logger.info("Successfully removed invalid subscription from database: {}", sub.getId());
+                    } catch (Exception deleteEx) {
+                        logger.error("Failed to delete invalid subscription: {}", deleteEx.getMessage());
+                    }
+                }
             }
         } catch (Exception e) {
             logger.error("An unexpected error occurred while sending push message to endpoint: {}", sub.getEndpoint(), e);
