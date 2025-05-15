@@ -80,7 +80,7 @@ public class WebPushService {
 
                 logger.warn("Subscription expired or invalid, removing from database: {}", sub.getEndpoint());
 
-                if (pushRepository != null && sub.getI
+                if (pushRepository != null && sub.getId() != null) {
                     try {
                         pushRepository.deleteById(sub.getId());
                         logger.info("Successfully removed invalid subscription from database: {}", sub.getId());
