@@ -151,22 +151,18 @@ public class ReservationController {
                 .findAllByUserId(reservation.getUserId())
                 .forEach(
                         sub -> {
-                            try {
-                                String title =
-                                        isParkedIn
-                                                ? "You've been parked in!"
-                                                : "Spot "
-                                                        + reservation.getSpotNumber()
-                                                        + " reserved!";
-                                String body =
-                                        isParkedIn
-                                                ? "Someone has parked in front of your car in spot "
-                                                        + reservation.getSpotNumber()
-                                                : "Check if you parked in someone";
-                                pushService.sendPush(sub, title, body);
-                            } catch (IOException | GeneralSecurityException e) {
-                                log.error("Failed to send push notification to subscription", e);
-                            }
+                            String title =
+                                    isParkedIn
+                                            ? "You've been parked in!"
+                                            : "Spot "
+                                                    + reservation.getSpotNumber()
+                                                    + " reserved!";
+                            String body =
+                                    isParkedIn
+                                            ? "Someone has parked in front of your car in spot "
+                                                    + reservation.getSpotNumber()
+                                            : "Check if you parked in someone";
+                            pushService.sendPush(sub, title, body);
                         });
     }
 
