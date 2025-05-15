@@ -2,7 +2,6 @@ package no.bachelorgroup13.backend.features.reservation.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -153,9 +152,7 @@ public class ReservationController {
                             String title =
                                     isParkedIn
                                             ? "You've been parked in!"
-                                            : "Spot "
-                                                    + reservation.getSpotNumber()
-                                                    + " reserved!";
+                                            : "Spot " + reservation.getSpotNumber() + " reserved!";
                             String body =
                                     isParkedIn
                                             ? "Someone has parked in front of your car in spot "

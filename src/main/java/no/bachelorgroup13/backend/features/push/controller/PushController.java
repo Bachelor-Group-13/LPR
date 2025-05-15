@@ -34,8 +34,7 @@ public class PushController {
     @Value("${vapid.keys.public}")
     private String vapidPublicKey;
 
-    public PushController(
-            PushSubscriptionRepository repository, WebPushService webPushService) {
+    public PushController(PushSubscriptionRepository repository, WebPushService webPushService) {
         this.repository = repository;
         this.webPushService = webPushService;
     }

@@ -1,6 +1,9 @@
 package no.bachelorgroup13.backend.features.push.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.security.Security;
+import java.util.HashMap;
+import java.util.Map;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
@@ -11,10 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.security.Security;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class WebPushService {
@@ -44,7 +43,10 @@ public class WebPushService {
     }
 
     public void sendPush(PushNotifications sub, String title, String body) {
-        if (sub == null || sub.getEndpoint() == null || sub.getP256dh() == null || sub.getAuth() == null) {
+        if (sub == null
+                || sub.getEndpoint() == null
+                || sub.getP256dh() == null
+                || sub.getAuth() == null) {
             logger.warn("Attempted to send push to an incomplete subscription: {}", sub);
             return;
         }
@@ -74,18 +76,22 @@ public class WebPushService {
         } catch (Exception e) {
             logger.error("Failed to send Web Push notification to: {}", sub.getEndpoint(), e);
 
-            if (e.getMessage() != null &&
-                    (e.getMessage().contains("410") ||
-                            e.getMessage().contains("404"))) {
+            if (e.getMessage() != null
+                    && (e.getMessage().contains("410") || e.getMessage().contains("404"))) {
 
-                logger.warn("Subscription expired or invalid, removing from database: {}", sub.getEndpoint());
+                logger.warn(
+                        "Subscription expired or invalid, removing from database: {}",
+                        sub.getEndpoint());
 
                 if (pushRepository != null && sub.getId() != null) {
                     try {
                         pushRepository.deleteById(sub.getId());
-                        logger.info("Successfully removed invalid subscription from database: {}", sub.getId());
+                        logger.info(
+                                "Successfully removed invalid subscription from database: {}",
+                                sub.getId());
                     } catch (Exception deleteEx) {
-                        logger.error("Failed to delete invalid subscription: {}", deleteEx.getMessage());
+                        logger.error(
+                                "Failed to delete invalid subscription: {}", deleteEx.getMessage());
                     }
                 }
             }
