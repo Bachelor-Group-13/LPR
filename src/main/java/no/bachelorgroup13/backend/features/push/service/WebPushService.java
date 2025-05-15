@@ -54,10 +54,10 @@ public class WebPushService {
 
             Subscription subscription = new Subscription();
             subscription.endpoint = sub.getEndpoint();
+            Subscription.Keys keys = new Subscription.Keys();
 
-            Map<String, String> keys = new HashMap<>();
-            keys.put("p256dh", sub.getP256dh());
-            keys.put("auth", sub.getAuth());
+            keys.p256dh = sub.getP256dh();
+            keys.auth = sub.getAuth();
             subscription.keys = keys;
 
             Map<String, String> payload = new HashMap<>();
@@ -80,7 +80,7 @@ public class WebPushService {
 
                 logger.warn("Subscription expired or invalid, removing from database: {}", sub.getEndpoint());
 
-                if (pushRepository != null && sub.getId() != null) {
+                if (pushRepository != null && sub.getI
                     try {
                         pushRepository.deleteById(sub.getId());
                         logger.info("Successfully removed invalid subscription from database: {}", sub.getId());
