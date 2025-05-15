@@ -1,6 +1,8 @@
 package no.bachelorgroup13.backend.features.push.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,20 +58,20 @@ public class WebPushService {
 
             Subscription subscription = new Subscription();
             subscription.endpoint = sub.getEndpoint();
-            Subscription.Keys keys = new Subscription.Keys();
 
+            Subscription.Keys keys = new Subscription.Keys();
             keys.p256dh = sub.getP256dh();
             keys.auth = sub.getAuth();
             subscription.keys = keys;
+            logger.debug("p256dh value: {}", sub.getP256dh());
+            logger.debug("auth value: {}", sub.getAuth());
 
-            Map<String, String> payload = new HashMap<>();
-            payload.put("title", title);
-            payload.put("body", body);
 
-            String jsonPayload = objectMapper.writeValueAsString(payload);
+            String jsonPayload = "{\"title\":\"" + title + "\",\"body\":\"" + body + "\"}";
             logger.debug("Notification payload: {}", jsonPayload);
 
             Notification notification = new Notification(subscription, jsonPayload);
+
             pushService.send(notification);
 
             logger.info("Successfully sent Web Push notification to: {}", sub.getEndpoint());
