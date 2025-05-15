@@ -6,11 +6,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class PushServiceWrapper {
     private static final Logger logger = LoggerFactory.getLogger(PushServiceWrapper.class);
 
     public void sendPush(PushNotifications sub, String title, String body) {
+        logger.info("PushServiceWrapper received subscription object:");
+        logger.info("  Endpoint: {}", sub != null ? sub.getEndpoint() : "null");
+        logger.info("  P256dh: {}", sub != null ? sub.getP256dh() : "null");
+        logger.info("  Auth: {}", sub != null ? sub.getAuth() : "null");
+
         if (sub == null || sub.getEndpoint() == null || sub.getP256dh() == null || sub.getAuth() == null) {
             logger.warn("Attempted to send push to an incomplete subscription: {}", sub);
             return;
@@ -24,9 +32,15 @@ public class PushServiceWrapper {
                     // .setIcon("/icons/icon-192x192.png") // Example
                     .build();
 
+            Map<String, String> webPushData = new HashMap<>();
+            webPushData.put("endpoint", sub.getEndpoint());
+            webPushData.put("keys.p256dh", sub.getP256dh());
+            webPushData.put("keys.auth", sub.getAuth());
+
             WebpushConfig webpushConfig = WebpushConfig.builder()
                     .setNotification(webpushNotification)
                     .setFcmOptions(WebpushFcmOptions.builder().setLink("https://129.241.152.242.nip.io/").build())
+                    .putAllData(webPushData)
                     .build();
 
             Message message = Message.builder()
