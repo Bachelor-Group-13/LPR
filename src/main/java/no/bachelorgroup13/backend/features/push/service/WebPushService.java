@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import nl.martijndwars.webpush.Notification;
@@ -53,6 +54,23 @@ public class WebPushService {
             return;
         }
 
+        String p256dh = sub.getP256dh();
+        String auth = sub.getAuth();
+        try {
+            // First try to decode with standard Base64
+            byte[] p256dhBytes = Base64.getDecoder().decode(p256dh);
+            byte[] authBytes = Base64.getDecoder().decode(auth);
+
+            p256dh = Base64.getUrlEncoder().withoutPadding().encodeToString(p256dhBytes);
+            auth = Base64.getUrlEncoder().withoutPadding().encodeToString(authBytes);
+
+            logger.debug("Re-encoded p256dh: {}", p256dh);
+            logger.debug("Re-encoded auth: {}", auth);
+        } catch (IllegalArgumentException e) {
+            logger.error("Failed to re-encode subscription keys", e);
+            return;
+        }
+
         try {
             logger.info("Preparing to send Web Push notification to: {}", sub.getEndpoint());
 
@@ -60,8 +78,8 @@ public class WebPushService {
             subscription.endpoint = sub.getEndpoint();
 
             Subscription.Keys keys = new Subscription.Keys();
-            keys.p256dh = sub.getP256dh();
-            keys.auth = sub.getAuth();
+            keys.p256dh = p256dh;
+            keys.auth = auth;
             subscription.keys = keys;
             logger.debug("p256dh value: {}", sub.getP256dh());
             logger.debug("auth value: {}", sub.getAuth());
