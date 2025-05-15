@@ -10,7 +10,7 @@ import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
 import no.bachelorgroup13.backend.features.push.dto.PushSubscriptionDto;
 import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
 import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.PushServiceWrapper;
+import no.bachelorgroup13.backend.features.push.service.WebPushService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,15 +29,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class PushController {
     private final Logger logger = LoggerFactory.getLogger(PushController.class);
     private final PushSubscriptionRepository repository;
-    private final PushServiceWrapper pushServiceWrapper;
+    private final WebPushService webPushService;
 
     @Value("${vapid.keys.public}")
     private String vapidPublicKey;
 
     public PushController(
-            PushSubscriptionRepository repository, PushServiceWrapper pushServiceWrapper) {
+            PushSubscriptionRepository repository, WebPushService webPushService) {
         this.repository = repository;
-        this.pushServiceWrapper = pushServiceWrapper;
+        this.webPushService = webPushService;
     }
 
     @Operation(summary = "Get VAPID public key")
@@ -104,7 +104,7 @@ public class PushController {
         subs.forEach(
                 sub -> {
                     try {
-                        pushServiceWrapper.sendPush(
+                        webPushService.sendPush(
                                 sub,
                                 "🅿️ Parking Manager Test",
                                 "If you see this, server-side works!");

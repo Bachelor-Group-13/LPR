@@ -2,8 +2,7 @@ package no.bachelorgroup13.backend.features.reservation.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -11,7 +10,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.PushServiceWrapper;
+import no.bachelorgroup13.backend.features.push.service.WebPushService;
 import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
 import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
 import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
@@ -38,7 +37,7 @@ public class ReservationController {
 
     private final ReservationService reservationService;
     private final PushSubscriptionRepository pushRepository;
-    private final PushServiceWrapper pushService;
+    private final WebPushService pushService;
     private final ReservationMapper reservationMapper;
 
     @Operation(summary = "Get all reservations")
