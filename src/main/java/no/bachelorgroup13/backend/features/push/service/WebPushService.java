@@ -10,6 +10,7 @@ import java.util.Map;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
+import nl.martijndwars.webpush.Urgency;
 import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
 import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -23,20 +24,19 @@ public class WebPushService {
     private static final Logger logger = LoggerFactory.getLogger(WebPushService.class);
     private final PushService pushService;
     private final PushSubscriptionRepository pushRepository;
-    private final ObjectMapper objectMapper;
 
     public WebPushService(
             @Value("${vapid.keys.public}") String publicKey,
             @Value("${vapid.keys.private}") String privateKey,
+            @Value("${vapid.subject}") String subject,
             PushSubscriptionRepository pushRepository) {
         this.pushRepository = pushRepository;
-        this.objectMapper = new ObjectMapper();
 
         Security.addProvider(new BouncyCastleProvider());
 
         try {
             this.pushService = new PushService(publicKey, privateKey);
-            this.pushService.setSubject("https://129.241.152.242.nip.io/");
+            this.pushService.setSubject(subject);
 
             logger.info("Web Push Service initialized successfully with public key: {}", publicKey);
         } catch (Exception e) {
@@ -57,7 +57,6 @@ public class WebPushService {
         String p256dh = sub.getP256dh();
         String auth = sub.getAuth();
         try {
-            // First try to decode with standard Base64
             byte[] p256dhBytes = Base64.getDecoder().decode(p256dh);
             byte[] authBytes = Base64.getDecoder().decode(auth);
 
@@ -88,7 +87,7 @@ public class WebPushService {
             String jsonPayload = "{\"title\":\"" + title + "\",\"body\":\"" + body + "\"}";
             logger.debug("Notification payload: {}", jsonPayload);
 
-            Notification notification = new Notification(subscription, jsonPayload);
+            Notification notification = new Notification(subscription, jsonPayload, Urgency.HIGH);
 
             pushService.send(notification);
 

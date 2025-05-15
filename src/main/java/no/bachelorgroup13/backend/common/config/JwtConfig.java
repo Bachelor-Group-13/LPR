@@ -18,14 +18,6 @@ public class JwtConfig {
         return secret;
     }
 
-    public long getExpiration() {
-        return expiration;
-    }
-
-    public long getRefreshExpiration() {
-        return refreshExpiration;
-    }
-
     public void setRefreshExpiration(long refreshExpiration) {
         this.refreshExpiration = refreshExpiration;
     }
