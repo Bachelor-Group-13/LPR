@@ -195,6 +195,7 @@ public class ReservationController {
                                 String aSpotNumber = rowNumber + "A";
 
                                 reservationService.getReservationsBySpotNumber(aSpotNumber).stream()
+                                        .filter(r -> r.getReservationDate().equals(LocalDate.now()))
                                         .filter(r -> !r.getAnonymous() && r.getUserId() != null)
                                         .findFirst()
                                         .ifPresent(

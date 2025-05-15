@@ -1,7 +1,6 @@
 package no.bachelorgroup13.backend.features.push.service;
 
 import com.google.gson.Gson;
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.Security;
@@ -29,17 +28,14 @@ public class PushServiceWrapper {
 
         Security.addProvider(new BouncyCastleProvider());
 
-        String safePublicKey = publicKey
-                .replace('+','-')
-                .replace('/','_')
-                .replaceAll("=+$", "");
+        String safePublicKey = publicKey.replace('+', '-').replace('/', '_').replaceAll("=+$", "");
 
-        String safePrivateKey = privateKey
-                .replace('+','-')
-                .replace('/','_')
-                .replaceAll("=+$", "");
+        String safePrivateKey =
+                privateKey.replace('+', '-').replace('/', '_').replaceAll("=+$", "");
 
-        logger.info("Initializing PushService with VAPID public key: {}…", safePublicKey.substring(0, 10));
+        logger.info(
+                "Initializing PushService with VAPID public key: {}…",
+                safePublicKey.substring(0, 10));
         this.pushService = new PushService(safePublicKey, safePrivateKey);
     }
 
@@ -47,23 +43,20 @@ public class PushServiceWrapper {
             throws GeneralSecurityException, IOException {
         String payload = new Gson().toJson(Map.of("title", title, "body", body));
 
-        String userKey = sub.getP256dh()
-                .replace('+','-')
-                .replace('/','_')
-                .replaceAll("=+$", "");
-        String authSecret = sub.getAuth()
-                .replace('+','-')
-                .replace('/','_')
-                .replaceAll("=+$", "");
+        String userKey = sub.getP256dh().replace('+', '-').replace('/', '_').replaceAll("=+$", "");
+        String authSecret = sub.getAuth().replace('+', '-').replace('/', '_').replaceAll("=+$", "");
 
         Notification notification =
                 new Notification(sub.getEndpoint(), userKey, authSecret, payload);
 
         try {
-            logger.info("Sending push → endpoint: {}  payload: {}…",
-                    sub.getEndpoint(), payload.substring(0, Math.min(payload.length(), 50)));
+            logger.info(
+                    "Sending push → endpoint: {}  payload: {}…",
+                    sub.getEndpoint(),
+                    payload.substring(0, Math.min(payload.length(), 50)));
             HttpResponse response = pushService.send(notification);
-            logger.info("FCM response status: {} {}",
+            logger.info(
+                    "FCM response status: {} {}",
                     response.getStatusLine().getStatusCode(),
                     response.getStatusLine().getReasonPhrase());
         } catch (Exception e) {
@@ -71,5 +64,4 @@ public class PushServiceWrapper {
             throw new RuntimeException(e);
         }
     }
-
 }

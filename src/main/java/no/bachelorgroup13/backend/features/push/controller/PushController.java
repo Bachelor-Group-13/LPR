@@ -115,4 +115,11 @@ public class PushController {
                 });
         return ResponseEntity.ok(Map.of("sent", subs.size()));
     }
+
+    @PostMapping("/unsubscribe")
+    public ResponseEntity<Void> unsubscribe(
+            @RequestBody Map<String, String> body, Authentication auth) {
+        repository.findByEndpoint(body.get("endpoint")).ifPresent(repository::delete);
+        return ResponseEntity.noContent().build();
+    }
 }
