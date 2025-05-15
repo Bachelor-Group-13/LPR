@@ -36,3 +36,7 @@ build/
 .env
 
 .DS_Store
+
+# Firebase service account
+src/main/resources/firebase-service-account.json
+
