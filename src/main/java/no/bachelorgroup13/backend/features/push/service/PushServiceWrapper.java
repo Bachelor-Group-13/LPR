@@ -25,29 +25,25 @@ public class PushServiceWrapper {
         }
 
         try {
-            WebpushNotification webpushNotification = WebpushNotification.builder()
+            WebpushNotification notification = WebpushNotification.builder()
                     .setTitle(title)
                     .setBody(body)
-                    // You can add other Web Push specific options here (icon, badge, etc.)
-                    // .setIcon("/icons/icon-192x192.png") // Example
                     .build();
-
-            Map<String, String> webPushData = new HashMap<>();
-            webPushData.put("endpoint", sub.getEndpoint());
-            webPushData.put("keys.p256dh", sub.getP256dh());
-            webPushData.put("keys.auth", sub.getAuth());
 
             WebpushConfig webpushConfig = WebpushConfig.builder()
-                    .setNotification(webpushNotification)
+                    .setNotification(notification)
                     .setFcmOptions(WebpushFcmOptions.builder().setLink("https://129.241.152.242.nip.io/").build())
-                    .putAllData(webPushData)
                     .build();
+
+            String endpoint = sub.getEndpoint();
+            String fcmToken = endpoint.substring(endpoint.lastIndexOf("/") + 1);
+
+            logger.info("Extracted FCM token: {}", fcmToken);
 
             Message message = Message.builder()
+                    .setToken(fcmToken)
                     .setWebpushConfig(webpushConfig)
-                    .setToken(sub.getEndpoint())
                     .build();
-
 
             logger.info("Sending push → endpoint: {}  title: {}", sub.getEndpoint(), title);
 
