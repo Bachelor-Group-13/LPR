@@ -35,8 +35,13 @@ public class Application {
                     dotenv.get("COMPUTER_VISION_SUBSCRIPTION_KEY"));
         }
         if (dotenv.get("VAPID_PUBLIC_KEY") != null) {
-            System.setProperty("VAPID_PUBLIC_KEY", dotenv.get("VAPID_PUBLIC_KEY"));
+            System.setProperty("vapid.keys.public", dotenv.get("VAPID_PUBLIC_KEY"));
         }
+
+        if (dotenv.get("VAPID_PRIVATE_KEY") != null) {
+            System.setProperty("vapid.keys.private", dotenv.get("VAPID_PUBLIC_KEY").trim());
+        }
+
         SpringApplication.run(Application.class, args);
     }
 
