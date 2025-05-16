@@ -1,14 +1,19 @@
 package no.bachelorgroup13.backend;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import jakarta.annotation.PostConstruct;
-import no.bachelorgroup13.backend.features.licenseplate.azurecv.LicensePlateProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+import io.github.cdimascio.dotenv.Dotenv;
+import jakarta.annotation.PostConstruct;
+import no.bachelorgroup13.backend.features.licenseplate.azurecv.LicensePlateProperties;
+
+/**
+ * Main application class for the parking system backend.
+ * Handles application startup and environment configuration.
+ */
 @SpringBootApplication
 @EnableConfigurationProperties(LicensePlateProperties.class)
 public class Application {

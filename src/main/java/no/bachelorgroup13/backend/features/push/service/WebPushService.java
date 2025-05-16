@@ -1,18 +1,12 @@
 package no.bachelorgroup13.backend.features.push.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import nl.martijndwars.webpush.Notification;
-import nl.martijndwars.webpush.PushService;
-import nl.martijndwars.webpush.Subscription;
-import nl.martijndwars.webpush.Urgency;
-import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
-import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jose4j.lang.JoseException;
 import org.slf4j.Logger;
@@ -20,12 +14,32 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import nl.martijndwars.webpush.Notification;
+import nl.martijndwars.webpush.PushService;
+import nl.martijndwars.webpush.Subscription;
+import nl.martijndwars.webpush.Urgency;
+import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
+import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+
+/**
+ * Service for sending web push notifications to subscribed users.
+ * Handles notification delivery and subscription management.
+ */
 @Service
 public class WebPushService {
     private static final Logger logger = LoggerFactory.getLogger(WebPushService.class);
     private final PushService pushService;
     private final PushSubscriptionRepository pushRepository;
 
+    /**
+     * Constructs a new WebPushService with VAPID keys and subject.
+     * @param publicKey VAPID public key
+     * @param privateKey VAPID private key
+     * @param subject VAPID subject
+     * @param pushRepository Repository for managing push subscriptions
+     */
     public WebPushService(
             @Value("${vapid.keys.public}") String publicKey,
             @Value("${vapid.keys.private}") String privateKey,
@@ -50,6 +64,13 @@ public class WebPushService {
         }
     }
 
+    /**
+     * Sends a push notification to a subscribed user.
+     * Automatically removes invalid subscriptions from the database.
+     * @param sub Push notification subscription details
+     * @param title Notification title
+     * @param body Notification body
+     */
     public void sendPush(PushNotifications sub, String title, String body) {
         if (sub == null
                 || sub.getEndpoint() == null

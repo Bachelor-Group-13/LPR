@@ -1,6 +1,5 @@
 package no.bachelorgroup13.backend.features.licenseplate.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,48 +14,62 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.LicensePlateProperties;
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.model.AnalyzeResult;
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.model.Line;
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.model.ReadResponse;
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.model.ReadResult;
 import no.bachelorgroup13.backend.features.licenseplate.dto.PlateDto;
-import org.springframework.stereotype.Service;
 
+/**
+ * Service for license plate recognition using Azure Computer Vision API.
+ * Handles image processing, API communication, and license plate text extraction.
+ */
 @Service
 public class LicensePlateService {
 
-    // Regex for plates (e.g. AB12345)
+    // Regex for plates (AB12345)
     private static final Pattern PLATE_REGEX = Pattern.compile("(?i)^[A-Z]{2}[- ]?\\d{5}$");
 
     private final String endpoint;
     private final String subscriptionKey;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Constructs a new LicensePlateService with Azure credentials.
+     * @param properties Azure Cognitive Services configuration properties
+     */
     public LicensePlateService(LicensePlateProperties properties) {
         this.endpoint = properties.getEndpoint();
         this.subscriptionKey = properties.getKey();
     }
 
     /**
-     * Method to POST the image to Azure, poll for the read results, extract plates
-     * via regex
+     * Processes an image file to detect and extract license plates.
+     * @param imageFile The image file to analyze
+     * @return List of detected license plates with their bounding boxes
+     * @throws IOException If there are issues with file handling or API communication
+     * @throws InterruptedException If the polling operation is interrupted
      */
     public List<PlateDto> getLicensePlates(File imageFile)
             throws IOException, InterruptedException {
-        // Send image & get operation location
         String operationLocation = sendImageAndGetOperationLocation(imageFile);
 
-        // Poll for the result
         ReadResponse readResponse = pollReadResult(operationLocation);
 
-        // Extract license plates
         return extractPlatesFromResponse(readResponse);
     }
 
     /**
-     * POSTs the image to the Azure "read/analyze" endpoint, returns the
-     * "Operation-Location" header.
+     * Sends an image to Azure Computer Vision API for analysis.
+     * @param imageFile The image file to send
+     * @return Operation location URL for polling results
+     * @throws IOException If there are issues with file handling or API communication
      */
     private String sendImageAndGetOperationLocation(File imageFile) throws IOException {
         URI analyzeUri = URI.create(endpoint + "/vision/v3.2/read/analyze");
@@ -67,7 +80,6 @@ public class LicensePlateService {
         connection.setRequestProperty("Content-Type", "application/octet-stream");
         connection.setDoOutput(true);
 
-        // Write image bytes
         try (FileInputStream inputStream = new FileInputStream(imageFile);
                 OutputStream outputStream = connection.getOutputStream()) {
             byte[] buffer = new byte[4096];
@@ -78,7 +90,6 @@ public class LicensePlateService {
         }
 
         int responseCode = connection.getResponseCode();
-        // 202 => we expect an Operation-Location header
         if (responseCode != 202) {
             String errorMessage = readStream(connection.getErrorStream());
             throw new IOException(
@@ -93,14 +104,17 @@ public class LicensePlateService {
     }
 
     /**
-     * Polls the operation location until the status is no longer "notStarted" or
-     * "running".
+     * Polls the Azure API for analysis results with exponential backoff.
+     * @param operationLocation URL to poll for results
+     * @return Analysis results from Azure
+     * @throws IOException If there are issues with API communication
+     * @throws InterruptedException If the polling operation is interrupted
      */
     private ReadResponse pollReadResult(String operationLocation)
             throws IOException, InterruptedException {
         int maxAttempts = 10;
         int attempt = 0;
-        long backoffMs = 1000; // Start with 1 second
+        long backoffMs = 1000; 
 
         while (attempt < maxAttempts) {
             URI operationUri = URI.create(operationLocation);
@@ -128,15 +142,16 @@ public class LicensePlateService {
             if (attempt < maxAttempts) {
                 Thread.sleep(backoffMs);
                 backoffMs =
-                        Math.min(backoffMs * 2, 10000); // Double the backoff time, max 10 seconds
+                        Math.min(backoffMs * 2, 10000); 
             }
         }
         throw new IOException("Max polling attempts reached");
     }
 
     /**
-     * Extracts lines from the response, applies the plate regex, and returns any
-     * matches.
+     * Extracts license plates from the Azure API response using regex pattern matching.
+     * @param readResponse The response from Azure Computer Vision API
+     * @return List of detected license plates with their bounding boxes
      */
     private List<PlateDto> extractPlatesFromResponse(ReadResponse readResponse) {
         List<PlateDto> plates = new ArrayList<>();
@@ -150,7 +165,6 @@ public class LicensePlateService {
                     if (readResult.getLines() != null) {
                         for (Line line : readResult.getLines()) {
                             String candidate = line.getText();
-                            // remove spaces, dashes, colons
                             candidate = candidate.replaceAll("\\s+", "");
                             candidate = candidate.replaceAll("-", "");
                             candidate = candidate.replaceAll(":", "");
@@ -172,7 +186,12 @@ public class LicensePlateService {
         return plates;
     }
 
-    /** Reads an InputStream into a string */
+    /**
+     * Reads the contents of an InputStream into a String.
+     * @param inputStream The input stream to read
+     * @return The contents of the stream as a String
+     * @throws IOException If there are issues reading the stream
+     */
     private String readStream(InputStream inputStream) throws IOException {
         if (inputStream == null) {
             return "";

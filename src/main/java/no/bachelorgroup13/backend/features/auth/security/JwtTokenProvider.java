@@ -1,20 +1,30 @@
 package no.bachelorgroup13.backend.features.auth.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SecurityException;
 import java.security.Key;
 import java.util.Date;
 import java.util.UUID;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SecurityException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.bachelorgroup13.backend.common.config.JwtConfig;
 import no.bachelorgroup13.backend.features.user.entity.User;
 import no.bachelorgroup13.backend.features.user.repository.UserRepository;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
 
+/**
+ * Handles JWT token operations including generation, validation, and authentication.
+ * Manages both access and refresh tokens.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -23,11 +33,19 @@ public class JwtTokenProvider {
     private final JwtConfig jwtConfig;
     private final UserRepository userRepository;
 
+    /**
+     * Gets the signing key for JWT operations.
+     */
     private Key getSigningKey() {
         byte[] keyBytes = jwtConfig.getSecret().getBytes();
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * Generates a JWT token for authenticated user.
+     * @param authentication User authentication details
+     * @return JWT token string
+     */
     public String generateToken(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
@@ -43,6 +61,11 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    /**
+     * Generates a JWT token for a given username.
+     * @param username User's email/username
+     * @return JWT token string
+     */
     public String generateTokenWithUsername(String username) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtConfig.getExpiration());
@@ -55,6 +78,11 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    /**
+     * Generates a refresh token for a given username.
+     * @param username User's email/username
+     * @return Refresh token string
+     */
     public String generateRefreshToken(String username) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtConfig.getRefreshExpiration());
@@ -67,6 +95,11 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    /**
+     * Extracts username from JWT token.
+     * @param token JWT token string
+     * @return Username from token
+     */
     public String getUsernameFromToken(String token) {
         Claims claims =
                 Jwts.parserBuilder()
@@ -77,6 +110,11 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
+    /**
+     * Creates authentication object from JWT token.
+     * @param token JWT token string
+     * @return Authentication object
+     */
     public Authentication getAuthentication(String token) {
         Claims claims =
                 Jwts.parserBuilder()
@@ -99,6 +137,11 @@ public class JwtTokenProvider {
                 principal, token, principal.getAuthorities());
     }
 
+    /**
+     * Validates JWT token signature and expiration.
+     * @param token JWT token string
+     * @return true if token is valid
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);

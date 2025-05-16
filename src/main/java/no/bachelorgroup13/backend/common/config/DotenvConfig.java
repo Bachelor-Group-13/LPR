@@ -1,12 +1,21 @@
 package no.bachelorgroup13.backend.common.config;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
 
+import io.github.cdimascio.dotenv.Dotenv;
+import jakarta.annotation.PostConstruct;
+
+/**
+ * Configuration class for loading environment variables from .env file.
+ * Sets up system properties for JWT, Computer Vision, and VAPID keys.
+ */
 @Configuration
 public class DotenvConfig {
 
+    /**
+     * Loads environment variables from .env file and sets them as system properties.
+     * Handles JWT, Computer Vision, and VAPID configuration.
+     */
     @PostConstruct
     public void loadEnv() {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().ignoreIfMalformed().load();

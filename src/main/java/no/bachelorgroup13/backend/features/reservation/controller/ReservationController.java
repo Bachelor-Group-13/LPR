@@ -1,19 +1,10 @@
 package no.bachelorgroup13.backend.features.reservation.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.WebPushService;
-import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
-import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
-import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
-import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +18,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+import no.bachelorgroup13.backend.features.push.service.WebPushService;
+import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
+import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
+import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
+import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
+
+/**
+ * Controller for managing parking spot reservations.
+ * Handles CRUD operations and notifications for reservations.
+ */
 @RestController
 @Slf4j
 @RequestMapping("/api/reservations")
@@ -39,6 +45,10 @@ public class ReservationController {
     private final WebPushService pushService;
     private final ReservationMapper reservationMapper;
 
+    /**
+     * Retrieves all reservations.
+     * @return List of all reservations
+     */
     @Operation(summary = "Get all reservations")
     @GetMapping
     public ResponseEntity<List<ReservationDto>> getAllReservations() {
@@ -48,6 +58,11 @@ public class ReservationController {
                         .collect((Collectors.toList())));
     }
 
+    /**
+     * Retrieves a reservation by its ID.
+     * @param id Reservation ID
+     * @return Reservation if found, 404 if not found
+     */
     @Operation(summary = "Get reservation by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ReservationDto> getReservationById(@PathVariable Integer id) {
@@ -58,6 +73,11 @@ public class ReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Retrieves all reservations for a specific user.
+     * @param userId User ID
+     * @return List of user's reservations
+     */
     @Operation(summary = "Get reservations by user ID")
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ReservationDto>> getReservationsByUserId(@PathVariable UUID userId) {
@@ -67,6 +87,11 @@ public class ReservationController {
                         .collect(Collectors.toList()));
     }
 
+    /**
+     * Retrieves all reservations for a specific date.
+     * @param date Reservation date
+     * @return List of reservations for the date
+     */
     @Operation(summary = "Get reservations by date")
     @GetMapping("/date/{date}")
     public ResponseEntity<List<ReservationDto>> getReservationsByDate(
@@ -77,6 +102,11 @@ public class ReservationController {
                         .collect(Collectors.toList()));
     }
 
+    /**
+     * Retrieves all reservations for a specific license plate.
+     * @param licensePlate License plate number
+     * @return List of reservations for the license plate
+     */
     @Operation(summary = "Get reservations by license plate")
     @GetMapping("/license-plate/{licensePlate}")
     public ResponseEntity<List<ReservationDto>> getReservationsByLicensePlate(
@@ -87,13 +117,18 @@ public class ReservationController {
                         .collect(Collectors.toList()));
     }
 
+    /**
+     * Creates a new reservation.
+     * Sends push notifications for non-anonymous reservations.
+     * @param reservationDto Reservation details
+     * @return Created reservation or error message
+     */
     @Operation(summary = "Get reservations by spot number")
     @PostMapping
     public ResponseEntity<?> createReservation(@RequestBody ReservationDto reservationDto) {
         log.info("Received reservation request: {}", reservationDto);
 
         try {
-            // Validate non-anonymous reservations
             if (!reservationDto.isAnonymous()) {
                 if (reservationDto.getUserId() == null) {
                     return ResponseEntity.badRequest()
@@ -106,19 +141,16 @@ public class ReservationController {
                 }
             }
 
-            // Validate required fields for all reservations
             if (reservationDto.getSpotNumber() == null
                     || reservationDto.getReservationDate() == null) {
                 return ResponseEntity.badRequest()
                         .body("Spot number and reservation date are required");
             }
 
-            // Create reservation
             Reservation reservation = reservationMapper.toEntity(reservationDto);
             Reservation saved = reservationService.createReservation(reservation);
             ReservationDto savedDto = reservationMapper.toDto(saved);
 
-            // Send push notification for non-anonymous reservations
             if (!reservationDto.isAnonymous() && reservationDto.getUserId() != null) {
                 try {
                     sendPushNotification(saved, false);
@@ -143,6 +175,11 @@ public class ReservationController {
         }
     }
 
+    /**
+     * Sends push notifications to users about their reservations.
+     * @param reservation The reservation to notify about
+     * @param isParkedIn Whether the notification is about being parked in
+     */
     @Operation(summary = "Send push notification")
     private void sendPushNotification(Reservation reservation, boolean isParkedIn) {
         pushRepository
@@ -162,6 +199,13 @@ public class ReservationController {
                         });
     }
 
+    /**
+     * Updates an existing reservation.
+     * Handles special cases for B-spots and sends notifications.
+     * @param id Reservation ID
+     * @param reservationDto Updated reservation details
+     * @return Updated reservation or 404 if not found
+     */
     @Operation(summary = "Update reservation")
     @PutMapping("/{id}")
     public ResponseEntity<ReservationDto> updateReservation(
@@ -212,6 +256,11 @@ public class ReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Deletes a reservation by ID.
+     * @param id Reservation ID
+     * @return 204 No Content if successful, 404 if not found
+     */
     @Operation(summary = "Delete reservation")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservation(@PathVariable Integer id) {
@@ -225,6 +274,11 @@ public class ReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Deletes all reservations.
+     * Requires ROLE_DEVELOPER authority.
+     * @return 204 No Content if successful
+     */
     @Operation(summary = "Delete all reservations")
     @DeleteMapping("/all")
     @PreAuthorize("hasRole('ROLE_DEVELOPER')")

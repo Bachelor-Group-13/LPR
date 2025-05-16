@@ -1,21 +1,27 @@
 package no.bachelorgroup13.backend.features.auth.security;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Filter for JWT authentication.
+ * Validates JWT tokens from cookies and sets up security context.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -23,6 +29,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
 
+    /**
+     * Processes each request to validate JWT token and set up authentication.
+     * @param request HTTP request
+     * @param response HTTP response
+     * @param filterChain Filter chain
+     */
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -47,6 +59,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Extracts JWT token from request cookies.
+     * @param request HTTP request containing cookies
+     * @return Optional containing JWT token if found
+     */
     private Optional<String> getJwtFromCookie(HttpServletRequest request) {
         if (request.getCookies() != null) {
             return Arrays.stream(request.getCookies())

@@ -1,9 +1,7 @@
 package no.bachelorgroup13.backend.common.config;
 
 import java.util.List;
-import lombok.RequiredArgsConstructor;
-import no.bachelorgroup13.backend.features.auth.security.JwtAuthEntryPoint;
-import no.bachelorgroup13.backend.features.auth.security.JwtAuthenticationFilter;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +10,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,6 +21,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import lombok.RequiredArgsConstructor;
+import no.bachelorgroup13.backend.features.auth.security.JwtAuthEntryPoint;
+import no.bachelorgroup13.backend.features.auth.security.JwtAuthenticationFilter;
+
+/**
+ * Security configuration for the application.
+ * Handles authentication, authorization, and CORS settings.
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -31,6 +38,9 @@ public class SecurityConfig {
     private final JwtAuthEntryPoint unauthorizedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    /**
+     * Configures the authentication provider with user details service and password encoder.
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -41,21 +51,34 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    /**
+     * Creates and configures the authentication manager.
+     * @param authConfig Authentication configuration
+     * @return Configured authentication manager
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig)
             throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * Creates a BCrypt password encoder with strength of 10.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
 
+    /**
+     * Configures the security filter chain with CORS, CSRF, and endpoint authorization rules.
+     * @param http HttpSecurity configuration
+     * @return Configured security filter chain
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(
                         exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(
@@ -79,6 +102,8 @@ public class SecurityConfig {
                                         .authenticated()
                                         .requestMatchers("/api/push/**")
                                         .permitAll()
+                                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                                        .permitAll()
                                         .requestMatchers("/license-plate/**")
                                         .permitAll()
                                         .requestMatchers("/api/auth/license-plate/**")
@@ -96,6 +121,10 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Configures CORS settings for the application.
+     * Allows specific origins and sets up allowed methods and headers.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

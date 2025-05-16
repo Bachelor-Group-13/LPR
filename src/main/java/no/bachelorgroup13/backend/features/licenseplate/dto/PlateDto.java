@@ -1,11 +1,16 @@
 package no.bachelorgroup13.backend.features.licenseplate.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data transfer object for license plate recognition results.
+ * Contains the recognized text and bounding box coordinates.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

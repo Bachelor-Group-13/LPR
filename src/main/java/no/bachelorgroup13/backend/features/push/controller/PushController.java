@@ -1,16 +1,10 @@
 package no.bachelorgroup13.backend.features.push.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
-import no.bachelorgroup13.backend.features.push.dto.PushSubscriptionDto;
-import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
-import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.WebPushService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +17,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
+import no.bachelorgroup13.backend.features.push.dto.PushSubscriptionDto;
+import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
+import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+import no.bachelorgroup13.backend.features.push.service.WebPushService;
+
+/**
+ * Controller for managing web push notifications.
+ * Handles subscription, unsubscription, and testing of push notifications.
+ */
 @RestController
 @RequestMapping("/api/push")
 @Tag(name = "Push", description = "Endpoints for managing push notifications.")
@@ -34,17 +40,32 @@ public class PushController {
     @Value("${vapid.keys.public}")
     private String vapidPublicKey;
 
+    /**
+     * Constructs a new PushController with required dependencies.
+     * @param repository Repository for managing push subscriptions
+     * @param webPushService Service for sending push notifications
+     */
     public PushController(PushSubscriptionRepository repository, WebPushService webPushService) {
         this.repository = repository;
         this.webPushService = webPushService;
     }
 
+    /**
+     * Retrieves the VAPID public key for client-side push notification setup.
+     * @return VAPID public key
+     */
     @Operation(summary = "Get VAPID public key")
     @GetMapping("/publicKey")
     public ResponseEntity<String> publicKey() {
         return ResponseEntity.ok(vapidPublicKey);
     }
 
+    /**
+     * Subscribes a user to push notifications.
+     * @param dto Push subscription details
+     * @param authentication Current user authentication
+     * @return Success or error response
+     */
     @Operation(summary = "Subscribe to push notifications")
     @PostMapping("/subscribe")
     public ResponseEntity<?> subscribe(
@@ -94,6 +115,11 @@ public class PushController {
         }
     }
 
+    /**
+     * Sends a test push notification to all subscriptions of the authenticated user.
+     * @param auth Current user authentication
+     * @return Number of notifications sent
+     */
     @Operation(summary = "Server-side push smoke test")
     @GetMapping("/test")
     public ResponseEntity<Map<String, Integer>> testPush(Authentication auth) {
@@ -115,6 +141,12 @@ public class PushController {
         return ResponseEntity.ok(Map.of("sent", subs.size()));
     }
 
+    /**
+     * Unsubscribes a user from push notifications.
+     * @param body Request body containing the endpoint to unsubscribe
+     * @param auth Current user authentication
+     * @return Empty response with no content
+     */
     @PostMapping("/unsubscribe")
     public ResponseEntity<Void> unsubscribe(
             @RequestBody Map<String, String> body, Authentication auth) {

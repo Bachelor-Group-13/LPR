@@ -1,5 +1,16 @@
 package no.bachelorgroup13.backend.features.auth.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
@@ -16,17 +27,11 @@ import no.bachelorgroup13.backend.features.auth.security.JwtTokenProvider;
 import no.bachelorgroup13.backend.features.auth.service.AuthService;
 import no.bachelorgroup13.backend.features.user.entity.User;
 import no.bachelorgroup13.backend.features.user.repository.UserRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controller handling user authentication operations.
+ * Manages user login, registration, token refresh, and logout.
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -38,6 +43,12 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
 
+    /**
+     * Authenticates user and returns JWT token.
+     * @param loginRequest User credentials
+     * @param response HTTP response for setting cookies
+     * @return JWT response with user details
+     */
     @Operation(summary = "Login user")
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> authenticateUser(
@@ -75,6 +86,11 @@ public class AuthController {
                         null));
     }
 
+    /**
+     * Registers a new user in the system.
+     * @param signUpRequest User registration details
+     * @return Success message
+     */
     @Operation(summary = "Register user")
     @PostMapping("/signup")
     public ResponseEntity<MessageResponse> registerUser(
@@ -82,6 +98,11 @@ public class AuthController {
         return ResponseEntity.ok(authService.registerUser(signUpRequest));
     }
 
+    /**
+     * Refreshes the JWT token using refresh token.
+     * @param request HTTP request containing refresh token cookie
+     * @return New JWT response with tokens
+     */
     @Operation(summary = "Check if user is logged in")
     @PostMapping("/refresh")
     public ResponseEntity<JwtResponse> refreshToken(HttpServletRequest request) {
@@ -118,6 +139,11 @@ public class AuthController {
                         newRefreshToken));
     }
 
+    /**
+     * Logs out user by invalidating the JWT cookie.
+     * @param response HTTP response for clearing cookies
+     * @return Empty response
+     */
     @Operation(summary = "Logout user")
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {

@@ -1,19 +1,12 @@
 package no.bachelorgroup13.backend.features.user.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
-import no.bachelorgroup13.backend.features.user.dto.UserDto;
-import no.bachelorgroup13.backend.features.user.entity.User;
-import no.bachelorgroup13.backend.features.user.mapper.UserMapper;
-import no.bachelorgroup13.backend.features.user.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +21,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
+import no.bachelorgroup13.backend.features.user.dto.UserDto;
+import no.bachelorgroup13.backend.features.user.entity.User;
+import no.bachelorgroup13.backend.features.user.mapper.UserMapper;
+import no.bachelorgroup13.backend.features.user.service.UserService;
+
+/**
+ * REST controller for managing user operations.
+ * Provides endpoints for user CRUD operations and authentication.
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -37,6 +43,10 @@ public class UserController {
     private final UserMapper userMapper;
     @Autowired private PasswordEncoder passwordEncoder;
 
+    /**
+     * Retrieves all users in the system.
+     * @return List of all users as DTOs
+     */
     @Operation(summary = "Get all users")
     @GetMapping
     public ResponseEntity<List<UserDto>> getAllUsers() {
@@ -46,6 +56,11 @@ public class UserController {
                         .collect(Collectors.toList()));
     }
 
+    /**
+     * Retrieves a user by their ID.
+     * @param id The user's ID
+     * @return User DTO if found, 404 if not found
+     */
     @Operation(summary = "Get user by ID")
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable UUID id) {
@@ -56,6 +71,11 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Retrieves a user by their license plate.
+     * @param licensePlate The license plate to search for
+     * @return User DTO if found, response with found=false if not found
+     */
     @Operation(summary = "Get user by license plate")
     @GetMapping("/license-plate/{licensePlate}")
     public ResponseEntity<?> getUserByLicensePlate(@PathVariable String licensePlate) {
@@ -84,6 +104,11 @@ public class UserController {
         }
     }
 
+    /**
+     * Creates a new user.
+     * @param userDto The user data to create
+     * @return Created user as DTO with 201 status
+     */
     @Operation(summary = "Create a new user")
     @PostMapping
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
@@ -92,6 +117,13 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toDto(createdUser));
     }
 
+    /**
+     * Updates an existing user.
+     * Preserves existing values for null fields and handles password encryption.
+     * @param id The ID of the user to update
+     * @param userDto The updated user data
+     * @return Updated user as DTO if found, 404 if not found
+     */
     @Operation(summary = "Update user by ID")
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @RequestBody UserDto userDto) {
@@ -122,6 +154,11 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Deletes a user by their ID.
+     * @param id The ID of the user to delete
+     * @return 204 No Content if successful, 404 if not found
+     */
     @Operation(summary = "Delete user by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
@@ -135,6 +172,11 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Retrieves the currently authenticated user.
+     * @param authentication The current authentication context
+     * @return Current user as DTO if authenticated, 401 if not authenticated
+     */
     @Operation(summary = "Get current user")
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {

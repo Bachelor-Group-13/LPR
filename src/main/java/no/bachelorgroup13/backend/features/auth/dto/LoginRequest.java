@@ -5,6 +5,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+/**
+ * Data transfer object for user login requests.
+ * Contains email and password for authentication.
+ */
 @Data
 public class LoginRequest {
     @Schema(description = "The email of the user.")

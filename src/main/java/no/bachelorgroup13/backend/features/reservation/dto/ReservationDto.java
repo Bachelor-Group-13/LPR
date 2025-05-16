@@ -1,11 +1,16 @@
 package no.bachelorgroup13.backend.features.reservation.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.UUID;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * Data transfer object for parking spot reservations.
+ * Contains all necessary information about a reservation including user and vehicle details.
+ */
 @Data
 public class ReservationDto {
     @Schema(description = "The ID of the reservation.")
