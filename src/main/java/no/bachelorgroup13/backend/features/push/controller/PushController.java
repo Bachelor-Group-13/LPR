@@ -121,40 +121,4 @@ public class PushController {
         repository.findByEndpoint(body.get("endpoint")).ifPresent(repository::delete);
         return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/test-cli")
-    public ResponseEntity<String> testCliPush() {
-        try {
-            PushNotifications pushNotification = new PushNotifications();
-            pushNotification.setEndpoint(
-                    "https://fcm.googleapis.com/fcm/send/fchvyGJBhik:APA91bFRNksx5F5Yz-JeI26RIDw9-_1UYmZE5rPh9xt1iVBuZgRXLxy6QQ1vTGzrFjIHUuJ39Su8kYpObPczXa4yU-Gc56Izwbqi_4PxTtRvkXdWTiSQ6XC_vS7tBjJHTzBhU8ZDZw-l");
-            String p256dh = "BCRtawoGeUy/3muV/Ylv6cwmVbWlaZ3YMD7iN7Bi6/+exTBsaDtQGkfsouZWtupHtnD1v1Vn24lZBuT3zaSMkhM=";
-            String auth = "Xy+YwWQhGi1FHSQdStuVoQ==";
-
-            // Replace any URL-safe characters with standard base64 characters
-            p256dh = p256dh.replace('-', '+').replace('_', '/');
-            auth = auth.replace('-', '+').replace('_', '/');
-
-            pushNotification.setP256dh(p256dh);
-            pushNotification.setAuth(auth);
-
-            webPushService.sendPush(pushNotification, "CLI Test", "Hello from CLI");
-
-            return ResponseEntity.ok("Test push sent with CLI values");
-        } catch (Exception e) {
-            logger.error("Test push failed: {}", e.getMessage());
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/debug-push")
-    public ResponseEntity<String> debugPush() {
-        try {
-            webPushService.debugPushLibrary();
-            return ResponseEntity.ok("Debug push sent");
-        } catch (Exception e) {
-            logger.error("Debug push failed: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
-        }
-    }
 }
