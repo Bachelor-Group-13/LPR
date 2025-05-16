@@ -151,7 +151,7 @@ public class WebPushService {
      */
     public void sendBSpotNotification(String userName, String aSpot, UUID userId) {
         String title = "You parked someone in!";
-        String body = "You parked in " + userName + " at spot " + aSpot + ".";
+        String body = "You parked in " + userName + " at spot " + aSpot;
         sendNotificationToUser(userId, title, body);
     }
 
@@ -163,7 +163,7 @@ public class WebPushService {
      */
     public void sendASpotNotification(String userName, UUID userId) {
         String title = "You've been parked in!";
-        String body = "You were parked in by " + userName + ".";
+        String body = "You were parked in by " + userName;
         sendNotificationToUser(userId, title, body);
     }
 
@@ -176,7 +176,7 @@ public class WebPushService {
      */
     public void sendRegularReservationNotification(String spot, String userName, UUID userId) {
         String title = "Spot " + spot + " reserved!";
-        String body = "You've reserved this spot for yourself, " + userName + ".";
+        String body = "You've reserved this spot for yourself, " + userName;
         sendNotificationToUser(userId, title, body);
     }
 }
