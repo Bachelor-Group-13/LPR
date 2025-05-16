@@ -1,7 +1,13 @@
 package no.bachelorgroup13.backend.features.licenseplate.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.ArrayList;
@@ -92,7 +98,11 @@ public class LicensePlateService {
      */
     private ReadResponse pollReadResult(String operationLocation)
             throws IOException, InterruptedException {
-        while (true) {
+        int maxAttempts = 10;
+        int attempt = 0;
+        long backoffMs = 1000; // Start with 1 second
+
+        while (attempt < maxAttempts) {
             URI operationUri = URI.create(operationLocation);
             HttpURLConnection connection =
                     (HttpURLConnection) operationUri.toURL().openConnection();
@@ -114,8 +124,14 @@ public class LicensePlateService {
                 return response;
             }
 
-            Thread.sleep(1000);
+            attempt++;
+            if (attempt < maxAttempts) {
+                Thread.sleep(backoffMs);
+                backoffMs =
+                        Math.min(backoffMs * 2, 10000); // Double the backoff time, max 10 seconds
+            }
         }
+        throw new IOException("Max polling attempts reached");
     }
 
     /**

@@ -1,23 +1,24 @@
 package no.bachelorgroup13.backend.features.push.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.Security;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.jose4j.lang.JoseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
 import nl.martijndwars.webpush.Urgency;
 import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
 import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.jose4j.lang.JoseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 public class WebPushService {
@@ -57,30 +58,34 @@ public class WebPushService {
             logger.warn("Attempted to send push to an incomplete subscription: {}", sub);
             return;
         }
-    
+
         try {
             logger.info("Preparing to send Web Push notification to: {}", sub.getEndpoint());
-    
+
             Subscription subscription = new Subscription();
             subscription.endpoint = sub.getEndpoint();
-    
+
             Subscription.Keys keys = new Subscription.Keys();
             keys.p256dh = sub.getP256dh();
             keys.auth = sub.getAuth();
             subscription.keys = keys;
-    
-            String jsonPayload = String.format(
-                "{\"title\":\"%s\",\"body\":\"%s\"}",
-                title.replace("\"", "\\\""),
-                body.replace("\"", "\\\"")
-            );            logger.debug("Notification payload: {}", jsonPayload);
-    
+
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, String> payload = new HashMap<>();
+            payload.put("title", title);
+            payload.put("body", body);
+            String jsonPayload = mapper.writeValueAsString(payload);
+
             Notification notification = new Notification(subscription, jsonPayload, Urgency.HIGH);
-    
+
             pushService.send(notification);
-    
+
             logger.info("Successfully sent Web Push notification to: {}", sub.getEndpoint());
-        } catch (IOException | InterruptedException | GeneralSecurityException | ExecutionException | JoseException e) {
+        } catch (IOException
+                | InterruptedException
+                | GeneralSecurityException
+                | ExecutionException
+                | JoseException e) {
             logger.error("Failed to send Web Push notification to: {}", sub.getEndpoint(), e);
             if (e.getMessage() != null
                     && (e.getMessage().contains("410") || e.getMessage().contains("404"))) {
@@ -101,6 +106,29 @@ public class WebPushService {
                     }
                 }
             }
+        }
+    }
+
+    private void debugPushLibrary() {
+        try {
+            Subscription subscription = new Subscription();
+            subscription.endpoint =
+                    "https://fcm.googleapis.com/fcm/send/fchvyGJBhik:APA91bFRNksx5F5Yz-JeI26RIDw9-_1UYmZE5rPh9xt1iVBuZgRXLxy6QQ1vTGzrFjIHUuJ39Su8kYpObPczXa4yU-Gc56Izwbqi_4PxTtRvkXdWTiSQ6XC_vS7tBjJHTzBhU8ZDZw-l";
+
+            Subscription.Keys keys = new Subscription.Keys();
+            keys.p256dh =
+                    "BCRtawoGeUy/3muV/Ylv6cwmVbWlaZ3YMD7iN7Bi6/+exTBsaDtQGkfsouZWtupHtnD1v1Vn24lZBuT3zaSMkhM=";
+            keys.auth = "Xy+YwWQhGi1FHSQdStuVoQ==";
+            subscription.keys = keys;
+
+            String payload = "{\"title\":\"Debug Test\",\"body\":\"Testing from Java\"}";
+            Notification notification = new Notification(subscription, payload);
+
+            pushService.send(notification);
+            logger.info("Debug push sent successfully");
+        } catch (Exception e) {
+            logger.error("Debug push failed: {}", e.getMessage());
+            e.printStackTrace();
         }
     }
 }
