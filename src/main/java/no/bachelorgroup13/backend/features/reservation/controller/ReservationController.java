@@ -1,10 +1,21 @@
 package no.bachelorgroup13.backend.features.reservation.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+import no.bachelorgroup13.backend.features.push.service.WebPushService;
+import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
+import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
+import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
+import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
+import no.bachelorgroup13.backend.features.user.entity.User;
+import no.bachelorgroup13.backend.features.user.repository.UserRepository;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,17 +28,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.WebPushService;
-import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
-import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
-import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
-import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
 
 /**
  * Controller for managing parking spot reservations.
@@ -44,6 +44,15 @@ public class ReservationController {
     private final PushSubscriptionRepository pushRepository;
     private final WebPushService pushService;
     private final ReservationMapper reservationMapper;
+    private final UserRepository userRepository;
+
+    /**
+     * Utility to look up a user's name
+     * @return Name of the user
+     */
+    private String getUserName(UUID userId) {
+        return userRepository.findById(userId).map(User::getName).orElse("someone");
+    }
 
     /**
      * Retrieves all reservations.
@@ -120,137 +129,127 @@ public class ReservationController {
     /**
      * Creates a new reservation.
      * Sends push notifications for non-anonymous reservations.
-     * @param reservationDto Reservation details
-     * @return Created reservation or error message
+     * @return Created a reservation or error message
      */
-    @Operation(summary = "Get reservations by spot number")
     @PostMapping
-    public ResponseEntity<?> createReservation(@RequestBody ReservationDto reservationDto) {
-        log.info("Received reservation request: {}", reservationDto);
-
+    @Operation(summary = "Create a new reservation (and send notifications)")
+    public ResponseEntity<ReservationDto> createReservation(@RequestBody ReservationDto dto) {
+        log.info("Received reservation request: {}", dto);
         try {
-            if (!reservationDto.isAnonymous()) {
-                if (reservationDto.getUserId() == null) {
-                    return ResponseEntity.badRequest()
-                            .body("User ID is required for non-anonymous reservations");
-                }
+            Reservation toSave = reservationMapper.toEntity(dto);
 
-                if (reservationService.hasActiveReservation(reservationDto.getUserId())) {
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
-                            .body("User already has an active reservation");
-                }
+            Reservation saved = reservationService.createReservation(toSave);
+
+            UUID userId = saved.getUserId();
+            String userName = getUserName(userId);
+            String spot = saved.getSpotNumber();
+
+            if (spot.endsWith("B")) {
+                String row = spot.substring(0, spot.length() - 1);
+                String aSpot = row + "A";
+
+                String bTitle = "You parked someone in!";
+                String bBody = "You parked in " + userName + " at spot " + aSpot + ".";
+                pushRepository
+                        .findAllByUserId(userId)
+                        .forEach(sub -> pushService.sendPush(sub, bTitle, bBody));
+
+                reservationService.getReservationsBySpotNumber(aSpot).stream()
+                        .filter(r -> r.getReservationDate().equals(LocalDate.now()))
+                        .filter(
+                                r ->
+                                        !Boolean.TRUE.equals(r.getAnonymous())
+                                                && r.getUserId() != null)
+                        .findFirst()
+                        .ifPresent(
+                                aRes -> {
+                                    String aTitle = "You’ve been parked in!";
+                                    String aBody = "You were parked in by " + userName + ".";
+                                    pushRepository
+                                            .findAllByUserId(aRes.getUserId())
+                                            .forEach(
+                                                    sub ->
+                                                            pushService.sendPush(
+                                                                    sub, aTitle, aBody));
+                                });
+
+            } else {
+                String title = "Spot " + spot + " reserved!";
+                String body = "You’ve reserved this spot for yourself, " + userName + ".";
+                pushRepository
+                        .findAllByUserId(userId)
+                        .forEach(sub -> pushService.sendPush(sub, title, body));
             }
 
-            if (reservationDto.getSpotNumber() == null
-                    || reservationDto.getReservationDate() == null) {
-                return ResponseEntity.badRequest()
-                        .body("Spot number and reservation date are required");
-            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(reservationMapper.toDto(saved));
 
-            Reservation reservation = reservationMapper.toEntity(reservationDto);
-            Reservation saved = reservationService.createReservation(reservation);
-            ReservationDto savedDto = reservationMapper.toDto(saved);
-
-            if (!reservationDto.isAnonymous() && reservationDto.getUserId() != null) {
-                try {
-                    sendPushNotification(saved, false);
-                } catch (Exception e) {
-                    log.error("Failed to send push notification", e);
-                }
-            }
-
-            log.info("Successfully created reservation: {}", saved);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedDto);
-
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid reservation request", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (IllegalStateException e) {
-            log.error("Conflict while creating reservation", e);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error while creating reservation", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to create reservation: " + e.getMessage());
+            log.error("Error creating reservation", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    /**
-     * Sends push notifications to users about their reservations.
-     * @param reservation The reservation to notify about
-     * @param isParkedIn Whether the notification is about being parked in
-     */
-    @Operation(summary = "Send push notification")
-    private void sendPushNotification(Reservation reservation, boolean isParkedIn) {
-        pushRepository
-                .findAllByUserId(reservation.getUserId())
-                .forEach(
-                        sub -> {
-                            String title =
-                                    isParkedIn
-                                            ? "You've been parked in!"
-                                            : "Spot " + reservation.getSpotNumber() + " reserved!";
-                            String body =
-                                    isParkedIn
-                                            ? "Someone has parked in front of your car in spot "
-                                                    + reservation.getSpotNumber()
-                                            : "Check if you parked in someone";
-                            pushService.sendPush(sub, title, body);
-                        });
-    }
-
-    /**
-     * Updates an existing reservation.
-     * Handles special cases for B-spots and sends notifications.
-     * @param id Reservation ID
-     * @param reservationDto Updated reservation details
-     * @return Updated reservation or 404 if not found
-     */
-    @Operation(summary = "Update reservation")
     @PutMapping("/{id}")
+    @Operation(summary = "Update reservation (and send notifications on B-spot)")
     public ResponseEntity<ReservationDto> updateReservation(
-            @PathVariable Integer id, @RequestBody ReservationDto reservationDto) {
+            @PathVariable Integer id, @RequestBody ReservationDto dto) {
         return reservationService
                 .getReservationById(id)
                 .map(
-                        existingReservation -> {
-                            Reservation reservation = reservationMapper.toEntity(reservationDto);
-                            reservation.setId(id);
+                        existing -> {
+                            Reservation toUpdate = reservationMapper.toEntity(dto);
+                            toUpdate.setId(id);
 
-                            boolean isBSpot = reservation.getSpotNumber().endsWith("B");
+                            Reservation updated = reservationService.updateReservation(toUpdate);
 
-                            if (isBSpot && reservation.getLicensePlate() != null) {
-                                reservation.setBlockedSpot(true);
+                            if (updated.getSpotNumber().endsWith("B")
+                                    && updated.getLicensePlate() != null) {
+                                String row =
+                                        updated.getSpotNumber()
+                                                .substring(0, updated.getSpotNumber().length() - 1);
+                                String aSpot = row + "A";
+                                UUID bUser = updated.getUserId();
+                                String userName = getUserName(bUser);
 
-                                String rowNumber =
-                                        reservation
-                                                .getSpotNumber()
-                                                .substring(
-                                                        0,
-                                                        reservation.getSpotNumber().length() - 1);
-                                String aSpotNumber = rowNumber + "A";
+                                pushRepository
+                                        .findAllByUserId(bUser)
+                                        .forEach(
+                                                sub ->
+                                                        pushService.sendPush(
+                                                                sub,
+                                                                "You parked someone in!",
+                                                                "You parked in "
+                                                                        + userName
+                                                                        + " at spot "
+                                                                        + aSpot
+                                                                        + "."));
 
-                                reservationService.getReservationsBySpotNumber(aSpotNumber).stream()
+                                reservationService.getReservationsBySpotNumber(aSpot).stream()
                                         .filter(r -> r.getReservationDate().equals(LocalDate.now()))
-                                        .filter(r -> !r.getAnonymous() && r.getUserId() != null)
+                                        .filter(
+                                                r ->
+                                                        !Boolean.TRUE.equals(r.getAnonymous())
+                                                                && r.getUserId() != null)
                                         .findFirst()
                                         .ifPresent(
-                                                aSpotReservation -> {
-                                                    try {
-                                                        sendPushNotification(
-                                                                aSpotReservation, true);
-                                                    } catch (Exception e) {
-                                                        log.error(
-                                                                "Failed to send parked-in"
-                                                                        + " notification",
-                                                                e);
-                                                    }
+                                                aRes -> {
+                                                    pushRepository
+                                                            .findAllByUserId(aRes.getUserId())
+                                                            .forEach(
+                                                                    sub ->
+                                                                            pushService.sendPush(
+                                                                                    sub,
+                                                                                    "You’ve been"
+                                                                                        + " parked"
+                                                                                        + " in!",
+                                                                                    "You were"
+                                                                                        + " parked"
+                                                                                        + " in by "
+                                                                                            + userName
+                                                                                            + "."));
                                                 });
-                            } else {
-                                reservation.setBlockedSpot(false);
                             }
 
-                            Reservation updated = reservationService.updateReservation(reservation);
                             return ResponseEntity.ok(reservationMapper.toDto(updated));
                         })
                 .orElse(ResponseEntity.notFound().build());

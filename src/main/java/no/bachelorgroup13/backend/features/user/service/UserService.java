@@ -3,14 +3,12 @@ package no.bachelorgroup13.backend.features.user.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import lombok.RequiredArgsConstructor;
 import no.bachelorgroup13.backend.features.auth.security.Role;
 import no.bachelorgroup13.backend.features.user.entity.User;
 import no.bachelorgroup13.backend.features.user.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 /**
  * Service for managing user operations.

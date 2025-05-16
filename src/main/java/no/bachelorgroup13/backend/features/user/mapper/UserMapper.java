@@ -1,9 +1,8 @@
 package no.bachelorgroup13.backend.features.user.mapper;
 
-import org.springframework.stereotype.Component;
-
 import no.bachelorgroup13.backend.features.user.dto.UserDto;
 import no.bachelorgroup13.backend.features.user.entity.User;
+import org.springframework.stereotype.Component;
 
 /**
  * Mapper for converting between User entities and DTOs.

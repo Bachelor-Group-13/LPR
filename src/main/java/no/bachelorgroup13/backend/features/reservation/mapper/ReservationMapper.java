@@ -1,9 +1,8 @@
 package no.bachelorgroup13.backend.features.reservation.mapper;
 
-import org.springframework.stereotype.Component;
-
 import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
 import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
+import org.springframework.stereotype.Component;
 
 /**
  * Mapper for converting between Reservation entities and DTOs.

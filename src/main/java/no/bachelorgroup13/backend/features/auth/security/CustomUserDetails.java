@@ -3,12 +3,10 @@ package no.bachelorgroup13.backend.features.auth.security;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
-
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import lombok.Data;
 
 /**
  * Custom implementation of Spring Security's UserDetails.

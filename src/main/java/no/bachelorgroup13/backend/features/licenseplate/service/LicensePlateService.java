@@ -1,5 +1,6 @@
 package no.bachelorgroup13.backend.features.licenseplate.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,17 +15,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.LicensePlateProperties;
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.model.AnalyzeResult;
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.model.Line;
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.model.ReadResponse;
 import no.bachelorgroup13.backend.features.licenseplate.azurecv.model.ReadResult;
 import no.bachelorgroup13.backend.features.licenseplate.dto.PlateDto;
+import org.springframework.stereotype.Service;
 
 /**
  * Service for license plate recognition using Azure Computer Vision API.
@@ -114,7 +111,7 @@ public class LicensePlateService {
             throws IOException, InterruptedException {
         int maxAttempts = 10;
         int attempt = 0;
-        long backoffMs = 1000; 
+        long backoffMs = 1000;
 
         while (attempt < maxAttempts) {
             URI operationUri = URI.create(operationLocation);
@@ -141,8 +138,7 @@ public class LicensePlateService {
             attempt++;
             if (attempt < maxAttempts) {
                 Thread.sleep(backoffMs);
-                backoffMs =
-                        Math.min(backoffMs * 2, 10000); 
+                backoffMs = Math.min(backoffMs * 2, 10000);
             }
         }
         throw new IOException("Max polling attempts reached");

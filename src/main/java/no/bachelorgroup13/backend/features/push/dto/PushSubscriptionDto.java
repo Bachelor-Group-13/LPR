@@ -1,9 +1,8 @@
 package no.bachelorgroup13.backend.features.push.dto;
 
-import java.util.UUID;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

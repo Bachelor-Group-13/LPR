@@ -1,8 +1,7 @@
 package no.bachelorgroup13.backend.features.licenseplate.azurecv.model;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 
 /**
  * Represents a single read result from Azure Computer Vision.

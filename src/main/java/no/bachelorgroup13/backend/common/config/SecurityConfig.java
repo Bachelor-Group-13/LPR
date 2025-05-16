@@ -1,7 +1,9 @@
 package no.bachelorgroup13.backend.common.config;
 
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
+import no.bachelorgroup13.backend.features.auth.security.JwtAuthEntryPoint;
+import no.bachelorgroup13.backend.features.auth.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,10 +22,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import lombok.RequiredArgsConstructor;
-import no.bachelorgroup13.backend.features.auth.security.JwtAuthEntryPoint;
-import no.bachelorgroup13.backend.features.auth.security.JwtAuthenticationFilter;
 
 /**
  * Security configuration for the application.
@@ -102,7 +100,10 @@ public class SecurityConfig {
                                         .authenticated()
                                         .requestMatchers("/api/push/**")
                                         .permitAll()
-                                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                                        .requestMatchers(
+                                                "/v3/api-docs/**",
+                                                "/swagger-ui/**",
+                                                "/swagger-ui.html")
                                         .permitAll()
                                         .requestMatchers("/license-plate/**")
                                         .permitAll()

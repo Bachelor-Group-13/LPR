@@ -1,9 +1,12 @@
 package no.bachelorgroup13.backend.features.licenseplate.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
+import no.bachelorgroup13.backend.features.licenseplate.dto.PlateDto;
+import no.bachelorgroup13.backend.features.licenseplate.service.LicensePlateService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,11 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import no.bachelorgroup13.backend.features.licenseplate.dto.PlateDto;
-import no.bachelorgroup13.backend.features.licenseplate.service.LicensePlateService;
 
 /**
  * Controller for license plate recognition operations.

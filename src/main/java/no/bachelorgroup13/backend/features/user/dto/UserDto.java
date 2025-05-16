@@ -1,8 +1,7 @@
 package no.bachelorgroup13.backend.features.user.dto;
 
-import java.util.UUID;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

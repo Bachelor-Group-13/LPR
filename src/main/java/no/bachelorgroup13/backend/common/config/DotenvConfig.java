@@ -1,9 +1,8 @@
 package no.bachelorgroup13.backend.common.config;
 
-import org.springframework.context.annotation.Configuration;
-
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.annotation.PostConstruct;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuration class for loading environment variables from .env file.

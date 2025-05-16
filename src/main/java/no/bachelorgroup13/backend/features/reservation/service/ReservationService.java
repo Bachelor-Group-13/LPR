@@ -4,13 +4,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import lombok.RequiredArgsConstructor;
 import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
 import no.bachelorgroup13.backend.features.reservation.repository.ReservationRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service for managing parking spot reservations.

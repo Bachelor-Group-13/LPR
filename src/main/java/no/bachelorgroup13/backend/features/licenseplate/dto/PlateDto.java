@@ -1,8 +1,7 @@
 package no.bachelorgroup13.backend.features.licenseplate.dto;
 
-import java.util.List;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

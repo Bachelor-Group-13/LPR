@@ -3,10 +3,8 @@ package no.bachelorgroup13.backend.features.push.repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import org.springframework.data.repository.CrudRepository;
-
 import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
+import org.springframework.data.repository.CrudRepository;
 
 /**
  * Repository for managing push notification subscriptions.

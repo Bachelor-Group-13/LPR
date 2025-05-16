@@ -1,7 +1,14 @@
 package no.bachelorgroup13.backend.features.auth.service;
 
 import java.util.UUID;
-
+import lombok.RequiredArgsConstructor;
+import no.bachelorgroup13.backend.common.dto.MessageResponse;
+import no.bachelorgroup13.backend.features.auth.dto.JwtResponse;
+import no.bachelorgroup13.backend.features.auth.dto.LoginRequest;
+import no.bachelorgroup13.backend.features.auth.dto.SignupRequest;
+import no.bachelorgroup13.backend.features.auth.security.JwtTokenProvider;
+import no.bachelorgroup13.backend.features.user.entity.User;
+import no.bachelorgroup13.backend.features.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,15 +18,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
-import no.bachelorgroup13.backend.common.dto.MessageResponse;
-import no.bachelorgroup13.backend.features.auth.dto.JwtResponse;
-import no.bachelorgroup13.backend.features.auth.dto.LoginRequest;
-import no.bachelorgroup13.backend.features.auth.dto.SignupRequest;
-import no.bachelorgroup13.backend.features.auth.security.JwtTokenProvider;
-import no.bachelorgroup13.backend.features.user.entity.User;
-import no.bachelorgroup13.backend.features.user.repository.UserRepository;
 
 /**
  * Service handling user authentication and registration.

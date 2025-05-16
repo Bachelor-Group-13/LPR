@@ -1,12 +1,19 @@
 package no.bachelorgroup13.backend.features.user.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
+import no.bachelorgroup13.backend.features.user.dto.UserDto;
+import no.bachelorgroup13.backend.features.user.entity.User;
+import no.bachelorgroup13.backend.features.user.mapper.UserMapper;
+import no.bachelorgroup13.backend.features.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,15 +27,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
-import no.bachelorgroup13.backend.features.user.dto.UserDto;
-import no.bachelorgroup13.backend.features.user.entity.User;
-import no.bachelorgroup13.backend.features.user.mapper.UserMapper;
-import no.bachelorgroup13.backend.features.user.service.UserService;
 
 /**
  * REST controller for managing user operations.

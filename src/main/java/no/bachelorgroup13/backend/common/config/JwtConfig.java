@@ -1,9 +1,8 @@
 package no.bachelorgroup13.backend.common.config;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-
-import lombok.Data;
 
 /**
  * Configuration class for JWT (JSON Web Token) settings.

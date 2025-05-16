@@ -1,10 +1,9 @@
 package no.bachelorgroup13.backend.features.reservation.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.UUID;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**

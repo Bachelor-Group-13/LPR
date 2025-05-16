@@ -3,11 +3,9 @@ package no.bachelorgroup13.backend.features.reservation.repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-
+import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
 
 /**
  * Repository for managing parking spot reservations.

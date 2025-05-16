@@ -1,10 +1,16 @@
 package no.bachelorgroup13.backend.features.push.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
+import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
+import no.bachelorgroup13.backend.features.push.dto.PushSubscriptionDto;
+import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
+import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+import no.bachelorgroup13.backend.features.push.service.WebPushService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,14 +22,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import no.bachelorgroup13.backend.features.auth.security.CustomUserDetails;
-import no.bachelorgroup13.backend.features.push.dto.PushSubscriptionDto;
-import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
-import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.WebPushService;
 
 /**
  * Controller for managing web push notifications.

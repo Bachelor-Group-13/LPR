@@ -2,13 +2,11 @@ package no.bachelorgroup13.backend.features.user.repository;
 
 import java.util.Optional;
 import java.util.UUID;
-
+import no.bachelorgroup13.backend.features.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import no.bachelorgroup13.backend.features.user.entity.User;
 
 /**
  * Repository for managing user data.
