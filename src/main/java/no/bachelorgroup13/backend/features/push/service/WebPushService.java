@@ -109,7 +109,7 @@ public class WebPushService {
         }
     }
 
-    private void debugPushLibrary() {
+    public void debugPushLibrary() {
         try {
             Subscription subscription = new Subscription();
             subscription.endpoint =
