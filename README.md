@@ -1,33 +1,101 @@
-# Inneparkert Backend 
-Backend with License Plate Recognition in Java Spring Boot
+# Inneparkert Backend
 
-## Setting Up the Project
+The backend application for Inneparkert, a smart parking management system developed as a bachelor project in collaboration with Twoday.
 
-### 1. Clone the Repository
+## Overview
+
+This is the backend part of the Inneparkert system, built with Java and Spring Boot. It handles core business logic, user management, and serves REST APIs for the frontend.
+
+## Features
+
+- **REST API**
+
+  - Endpoints for user and license plate management
+  - Parking event processing
+  - Integration with detection API
+
+- **Authentication**
+
+  - JWT-based authentication and authorization
+  - Role-based access control
+
+- **Database Integration**
+
+  - PostgreSQL for persistent data storage
+
+## Technical Details
+
+### Built With
+
+- **Framework**: Spring Boot
+- **Language**: Java
+- **Database**: PostgreSQL
+- **Build Tool**: Maven
+- **Security**: Spring Security, JWT
+
+### Project Structure
+
+```
+backend/
+├── .github/workflows/
+│   └── build.yml
+├── src/
+│   └── main/java/no/
+│       └── backend/
+│           ├── common/
+│           │   ├── config
+│           │   └── dto
+│           └── features/
+│               ├── auth
+│               ├── licenseplate
+│               ├── push
+│               ├── reservation
+│               └── user
+├── Dockerfile
+└── pom.xml
+```
+
+
+## Getting Started
+
+### Prerequisites
+
+- Java 17+
+- PostgreSQL
+- Maven
+
+### Installation
+
+1. Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Bachelor-Group-13/backend.git
 cd backend
 ```
 
-### 2. Create the .env file
-Create a `.env`file in the root directory with the following variables:
-
-```bash
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRATION=86400000 
-COMPUTER_VISION_SUBSCRIPTION_KEY=your_azure_subscription_key
-COMPUTER_VISION_ENDPOINT=your_azure_endpoint
+2. Configure your `.env` file:
+```
+spring.datasource.url=jdbc:postgresql://localhost:5432/inneparkert
+spring.datasource.username=your_db_user
+spring.datasource.password=your_db_password
+jwt.secret=your_jwt_secret
 ```
 
-### 3. Start the PostgreSQL Database  
-The project uses Docker to run a PostgreSQL database. Start the database using the provided docker-compose.yml file:
-`docker-compose up -d`
+3. Run the application:
+```bash
+mvn spring-boot:run
+```
 
-### 4. Build and Run the application
-To build and run the application: 
-`mvn spring-boot:run`
+## Development
+- Build: `mvn clean install`
+- Run: `mvn spring-boot:run`
+- Test: `mvn test`
 
-### 5. Format before pushing
-To format and verify it's formatted before pushing 
-`mvn spotless:verify` and `mvn spotless:apply`
+##Prosject Status
+This service is part of the Inneparkert system and provides APIs for frontend communication and parking management.
+
+## Team
+
+- Viljar Hoem-Olsen
+- Thomas Åkre
+- Sander Grimstad
