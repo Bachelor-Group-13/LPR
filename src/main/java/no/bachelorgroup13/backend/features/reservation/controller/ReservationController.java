@@ -1,21 +1,10 @@
 package no.bachelorgroup13.backend.features.reservation.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.WebPushService;
-import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
-import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
-import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
-import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
-import no.bachelorgroup13.backend.features.user.entity.User;
-import no.bachelorgroup13.backend.features.user.repository.UserRepository;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +17,19 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+import no.bachelorgroup13.backend.features.push.service.WebPushService;
+import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
+import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
+import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
+import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
+import no.bachelorgroup13.backend.features.user.entity.User;
+import no.bachelorgroup13.backend.features.user.repository.UserRepository;
 
 /**
  * Controller for managing parking spot reservations.
@@ -126,10 +128,11 @@ public class ReservationController {
                         .collect(Collectors.toList()));
     }
 
-    /**
+   /**
      * Creates a new reservation.
      * Sends push notifications for non-anonymous reservations.
-     * @return Created a reservation or error message
+     * @param dto The reservation data to create
+     * @return ResponseEntity containing the created reservation DTO or error message
      */
     @PostMapping
     @Operation(summary = "Create a new reservation (and send notifications)")
@@ -137,58 +140,23 @@ public class ReservationController {
         log.info("Received reservation request: {}", dto);
         try {
             Reservation toSave = reservationMapper.toEntity(dto);
-
             Reservation saved = reservationService.createReservation(toSave);
-
-            UUID userId = saved.getUserId();
-            String userName = getUserName(userId);
-            String spot = saved.getSpotNumber();
-
-            if (spot.endsWith("B")) {
-                String row = spot.substring(0, spot.length() - 1);
-                String aSpot = row + "A";
-
-                String bTitle = "You parked someone in!";
-                String bBody = "You parked in " + userName + " at spot " + aSpot + ".";
-                pushRepository
-                        .findAllByUserId(userId)
-                        .forEach(sub -> pushService.sendPush(sub, bTitle, bBody));
-
-                reservationService.getReservationsBySpotNumber(aSpot).stream()
-                        .filter(r -> r.getReservationDate().equals(LocalDate.now()))
-                        .filter(
-                                r ->
-                                        !Boolean.TRUE.equals(r.getAnonymous())
-                                                && r.getUserId() != null)
-                        .findFirst()
-                        .ifPresent(
-                                aRes -> {
-                                    String aTitle = "You’ve been parked in!";
-                                    String aBody = "You were parked in by " + userName + ".";
-                                    pushRepository
-                                            .findAllByUserId(aRes.getUserId())
-                                            .forEach(
-                                                    sub ->
-                                                            pushService.sendPush(
-                                                                    sub, aTitle, aBody));
-                                });
-
-            } else {
-                String title = "Spot " + spot + " reserved!";
-                String body = "You’ve reserved this spot for yourself, " + userName + ".";
-                pushRepository
-                        .findAllByUserId(userId)
-                        .forEach(sub -> pushService.sendPush(sub, title, body));
-            }
+            reservationService.handleReservationNotifications(saved);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(reservationMapper.toDto(saved));
-
         } catch (Exception e) {
             log.error("Error creating reservation", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
+     /**
+     * Updates an existing reservation.
+     * Sends notifications if the updated reservation is for a B-spot with a license plate.
+     * @param id The ID of the reservation to update
+     * @param dto The updated reservation data
+     * @return ResponseEntity containing the updated reservation DTO if found, 404 if not found
+     */
     @PutMapping("/{id}")
     @Operation(summary = "Update reservation (and send notifications on B-spot)")
     public ResponseEntity<ReservationDto> updateReservation(
@@ -199,55 +167,11 @@ public class ReservationController {
                         existing -> {
                             Reservation toUpdate = reservationMapper.toEntity(dto);
                             toUpdate.setId(id);
-
                             Reservation updated = reservationService.updateReservation(toUpdate);
 
                             if (updated.getSpotNumber().endsWith("B")
                                     && updated.getLicensePlate() != null) {
-                                String row =
-                                        updated.getSpotNumber()
-                                                .substring(0, updated.getSpotNumber().length() - 1);
-                                String aSpot = row + "A";
-                                UUID bUser = updated.getUserId();
-                                String userName = getUserName(bUser);
-
-                                pushRepository
-                                        .findAllByUserId(bUser)
-                                        .forEach(
-                                                sub ->
-                                                        pushService.sendPush(
-                                                                sub,
-                                                                "You parked someone in!",
-                                                                "You parked in "
-                                                                        + userName
-                                                                        + " at spot "
-                                                                        + aSpot
-                                                                        + "."));
-
-                                reservationService.getReservationsBySpotNumber(aSpot).stream()
-                                        .filter(r -> r.getReservationDate().equals(LocalDate.now()))
-                                        .filter(
-                                                r ->
-                                                        !Boolean.TRUE.equals(r.getAnonymous())
-                                                                && r.getUserId() != null)
-                                        .findFirst()
-                                        .ifPresent(
-                                                aRes -> {
-                                                    pushRepository
-                                                            .findAllByUserId(aRes.getUserId())
-                                                            .forEach(
-                                                                    sub ->
-                                                                            pushService.sendPush(
-                                                                                    sub,
-                                                                                    "You’ve been"
-                                                                                        + " parked"
-                                                                                        + " in!",
-                                                                                    "You were"
-                                                                                        + " parked"
-                                                                                        + " in by "
-                                                                                            + userName
-                                                                                            + "."));
-                                                });
+                                reservationService.handleReservationNotifications(updated);
                             }
 
                             return ResponseEntity.ok(reservationMapper.toDto(updated));
