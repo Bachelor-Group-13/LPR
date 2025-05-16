@@ -108,27 +108,4 @@ public class WebPushService {
             }
         }
     }
-
-    public void debugPushLibrary() {
-        try {
-            Subscription subscription = new Subscription();
-            subscription.endpoint =
-                    "https://fcm.googleapis.com/fcm/send/fchvyGJBhik:APA91bFRNksx5F5Yz-JeI26RIDw9-_1UYmZE5rPh9xt1iVBuZgRXLxy6QQ1vTGzrFjIHUuJ39Su8kYpObPczXa4yU-Gc56Izwbqi_4PxTtRvkXdWTiSQ6XC_vS7tBjJHTzBhU8ZDZw-l";
-
-            Subscription.Keys keys = new Subscription.Keys();
-            keys.p256dh =
-                    "BCRtawoGeUy/3muV/Ylv6cwmVbWlaZ3YMD7iN7Bi6/+exTBsaDtQGkfsouZWtupHtnD1v1Vn24lZBuT3zaSMkhM=";
-            keys.auth = "Xy+YwWQhGi1FHSQdStuVoQ==";
-            subscription.keys = keys;
-
-            String payload = "{\"title\":\"Debug Test\",\"body\":\"Testing from Java\"}";
-            Notification notification = new Notification(subscription, payload);
-
-            pushService.send(notification);
-            logger.info("Debug push sent successfully");
-        } catch (Exception e) {
-            logger.error("Debug push failed: {}", e.getMessage());
-            e.printStackTrace();
-        }
-    }
 }
