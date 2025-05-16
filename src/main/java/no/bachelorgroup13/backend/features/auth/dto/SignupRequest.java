@@ -6,6 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * Data transfer object for user registration requests.
+ * Contains user details required for account creation.
+ */
 @Data
 public class SignupRequest {
     @Schema(description = "The email of the user.")

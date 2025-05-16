@@ -1,19 +1,10 @@
 package no.bachelorgroup13.backend.features.reservation.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.WebPushService;
-import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
-import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
-import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
-import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +18,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+import no.bachelorgroup13.backend.features.push.service.WebPushService;
+import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
+import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
+import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
+import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
+import no.bachelorgroup13.backend.features.user.entity.User;
+import no.bachelorgroup13.backend.features.user.repository.UserRepository;
+
+/**
+ * Controller for managing parking spot reservations.
+ * Handles CRUD operations and notifications for reservations.
+ */
 @RestController
 @Slf4j
 @RequestMapping("/api/reservations")
@@ -38,7 +46,20 @@ public class ReservationController {
     private final PushSubscriptionRepository pushRepository;
     private final WebPushService pushService;
     private final ReservationMapper reservationMapper;
+    private final UserRepository userRepository;
 
+    /**
+     * Utility to look up a user's name
+     * @return Name of the user
+     */
+    private String getUserName(UUID userId) {
+        return userRepository.findById(userId).map(User::getName).orElse("someone");
+    }
+
+    /**
+     * Retrieves all reservations.
+     * @return List of all reservations
+     */
     @Operation(summary = "Get all reservations")
     @GetMapping
     public ResponseEntity<List<ReservationDto>> getAllReservations() {
@@ -48,6 +69,11 @@ public class ReservationController {
                         .collect((Collectors.toList())));
     }
 
+    /**
+     * Retrieves a reservation by its ID.
+     * @param id Reservation ID
+     * @return Reservation if found, 404 if not found
+     */
     @Operation(summary = "Get reservation by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ReservationDto> getReservationById(@PathVariable Integer id) {
@@ -58,6 +84,11 @@ public class ReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Retrieves all reservations for a specific user.
+     * @param userId User ID
+     * @return List of user's reservations
+     */
     @Operation(summary = "Get reservations by user ID")
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ReservationDto>> getReservationsByUserId(@PathVariable UUID userId) {
@@ -67,6 +98,11 @@ public class ReservationController {
                         .collect(Collectors.toList()));
     }
 
+    /**
+     * Retrieves all reservations for a specific date.
+     * @param date Reservation date
+     * @return List of reservations for the date
+     */
     @Operation(summary = "Get reservations by date")
     @GetMapping("/date/{date}")
     public ResponseEntity<List<ReservationDto>> getReservationsByDate(
@@ -77,6 +113,11 @@ public class ReservationController {
                         .collect(Collectors.toList()));
     }
 
+    /**
+     * Retrieves all reservations for a specific license plate.
+     * @param licensePlate License plate number
+     * @return List of reservations for the license plate
+     */
     @Operation(summary = "Get reservations by license plate")
     @GetMapping("/license-plate/{licensePlate}")
     public ResponseEntity<List<ReservationDto>> getReservationsByLicensePlate(
@@ -87,131 +128,62 @@ public class ReservationController {
                         .collect(Collectors.toList()));
     }
 
-    @Operation(summary = "Get reservations by spot number")
+   /**
+     * Creates a new reservation.
+     * Sends push notifications for non-anonymous reservations.
+     * @param dto The reservation data to create
+     * @return ResponseEntity containing the created reservation DTO or error message
+     */
     @PostMapping
-    public ResponseEntity<?> createReservation(@RequestBody ReservationDto reservationDto) {
-        log.info("Received reservation request: {}", reservationDto);
-
+    @Operation(summary = "Create a new reservation (and send notifications)")
+    public ResponseEntity<ReservationDto> createReservation(@RequestBody ReservationDto dto) {
+        log.info("Received reservation request: {}", dto);
         try {
-            // Validate non-anonymous reservations
-            if (!reservationDto.isAnonymous()) {
-                if (reservationDto.getUserId() == null) {
-                    return ResponseEntity.badRequest()
-                            .body("User ID is required for non-anonymous reservations");
-                }
+            Reservation toSave = reservationMapper.toEntity(dto);
+            Reservation saved = reservationService.createReservation(toSave);
+            reservationService.handleReservationNotifications(saved);
 
-                if (reservationService.hasActiveReservation(reservationDto.getUserId())) {
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
-                            .body("User already has an active reservation");
-                }
-            }
-
-            // Validate required fields for all reservations
-            if (reservationDto.getSpotNumber() == null
-                    || reservationDto.getReservationDate() == null) {
-                return ResponseEntity.badRequest()
-                        .body("Spot number and reservation date are required");
-            }
-
-            // Create reservation
-            Reservation reservation = reservationMapper.toEntity(reservationDto);
-            Reservation saved = reservationService.createReservation(reservation);
-            ReservationDto savedDto = reservationMapper.toDto(saved);
-
-            // Send push notification for non-anonymous reservations
-            if (!reservationDto.isAnonymous() && reservationDto.getUserId() != null) {
-                try {
-                    sendPushNotification(saved, false);
-                } catch (Exception e) {
-                    log.error("Failed to send push notification", e);
-                }
-            }
-
-            log.info("Successfully created reservation: {}", saved);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedDto);
-
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid reservation request", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (IllegalStateException e) {
-            log.error("Conflict while creating reservation", e);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.CREATED).body(reservationMapper.toDto(saved));
         } catch (Exception e) {
-            log.error("Unexpected error while creating reservation", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to create reservation: " + e.getMessage());
+            log.error("Error creating reservation", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @Operation(summary = "Send push notification")
-    private void sendPushNotification(Reservation reservation, boolean isParkedIn) {
-        pushRepository
-                .findAllByUserId(reservation.getUserId())
-                .forEach(
-                        sub -> {
-                            String title =
-                                    isParkedIn
-                                            ? "You've been parked in!"
-                                            : "Spot " + reservation.getSpotNumber() + " reserved!";
-                            String body =
-                                    isParkedIn
-                                            ? "Someone has parked in front of your car in spot "
-                                                    + reservation.getSpotNumber()
-                                            : "Check if you parked in someone";
-                            pushService.sendPush(sub, title, body);
-                        });
-    }
-
-    @Operation(summary = "Update reservation")
+     /**
+     * Updates an existing reservation.
+     * Sends notifications if the updated reservation is for a B-spot with a license plate.
+     * @param id The ID of the reservation to update
+     * @param dto The updated reservation data
+     * @return ResponseEntity containing the updated reservation DTO if found, 404 if not found
+     */
     @PutMapping("/{id}")
+    @Operation(summary = "Update reservation (and send notifications on B-spot)")
     public ResponseEntity<ReservationDto> updateReservation(
-            @PathVariable Integer id, @RequestBody ReservationDto reservationDto) {
+            @PathVariable Integer id, @RequestBody ReservationDto dto) {
         return reservationService
                 .getReservationById(id)
                 .map(
-                        existingReservation -> {
-                            Reservation reservation = reservationMapper.toEntity(reservationDto);
-                            reservation.setId(id);
+                        existing -> {
+                            Reservation toUpdate = reservationMapper.toEntity(dto);
+                            toUpdate.setId(id);
+                            Reservation updated = reservationService.updateReservation(toUpdate);
 
-                            boolean isBSpot = reservation.getSpotNumber().endsWith("B");
-
-                            if (isBSpot && reservation.getLicensePlate() != null) {
-                                reservation.setBlockedSpot(true);
-
-                                String rowNumber =
-                                        reservation
-                                                .getSpotNumber()
-                                                .substring(
-                                                        0,
-                                                        reservation.getSpotNumber().length() - 1);
-                                String aSpotNumber = rowNumber + "A";
-
-                                reservationService.getReservationsBySpotNumber(aSpotNumber).stream()
-                                        .filter(r -> r.getReservationDate().equals(LocalDate.now()))
-                                        .filter(r -> !r.getAnonymous() && r.getUserId() != null)
-                                        .findFirst()
-                                        .ifPresent(
-                                                aSpotReservation -> {
-                                                    try {
-                                                        sendPushNotification(
-                                                                aSpotReservation, true);
-                                                    } catch (Exception e) {
-                                                        log.error(
-                                                                "Failed to send parked-in"
-                                                                        + " notification",
-                                                                e);
-                                                    }
-                                                });
-                            } else {
-                                reservation.setBlockedSpot(false);
+                            if (updated.getSpotNumber().endsWith("B")
+                                    && updated.getLicensePlate() != null) {
+                                reservationService.handleReservationNotifications(updated);
                             }
 
-                            Reservation updated = reservationService.updateReservation(reservation);
                             return ResponseEntity.ok(reservationMapper.toDto(updated));
                         })
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Deletes a reservation by ID.
+     * @param id Reservation ID
+     * @return 204 No Content if successful, 404 if not found
+     */
     @Operation(summary = "Delete reservation")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservation(@PathVariable Integer id) {
@@ -225,6 +197,11 @@ public class ReservationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Deletes all reservations.
+     * Requires ROLE_DEVELOPER authority.
+     * @return 204 No Content if successful
+     */
     @Operation(summary = "Delete all reservations")
     @DeleteMapping("/all")
     @PreAuthorize("hasRole('ROLE_DEVELOPER')")

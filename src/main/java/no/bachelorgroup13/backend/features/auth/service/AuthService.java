@@ -19,6 +19,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service handling user authentication and registration.
+ * Manages user login, signup, and token refresh operations.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -29,6 +33,11 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
+    /**
+     * Authenticates a user and generates JWT tokens.
+     * @param loginRequest User login credentials
+     * @return JWT response containing access and refresh tokens
+     */
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
         try {
             User user =
@@ -56,6 +65,11 @@ public class AuthService {
         }
     }
 
+    /**
+     * Registers a new user in the system.
+     * @param signUpRequest User registration details
+     * @return Success or error message
+     */
     public MessageResponse registerUser(SignupRequest signUpRequest) {
         if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
             return new MessageResponse("Error: Email is already in use!");
@@ -79,6 +93,11 @@ public class AuthService {
         return new MessageResponse("User registered successfully!");
     }
 
+    /**
+     * Refreshes the JWT token using a valid refresh token.
+     * @param refreshToken Current refresh token
+     * @return New JWT token
+     */
     public String refreshToken(String refreshToken) {
         if (jwtTokenProvider.validateToken(refreshToken)) {
             String username = jwtTokenProvider.getUsernameFromToken(refreshToken);

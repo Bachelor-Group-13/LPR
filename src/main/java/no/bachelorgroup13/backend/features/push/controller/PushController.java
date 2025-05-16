@@ -23,6 +23,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controller for managing web push notifications.
+ * Handles subscription, unsubscription, and testing of push notifications.
+ */
 @RestController
 @RequestMapping("/api/push")
 @Tag(name = "Push", description = "Endpoints for managing push notifications.")
@@ -34,17 +38,32 @@ public class PushController {
     @Value("${vapid.keys.public}")
     private String vapidPublicKey;
 
+    /**
+     * Constructs a new PushController with required dependencies.
+     * @param repository Repository for managing push subscriptions
+     * @param webPushService Service for sending push notifications
+     */
     public PushController(PushSubscriptionRepository repository, WebPushService webPushService) {
         this.repository = repository;
         this.webPushService = webPushService;
     }
 
+    /**
+     * Retrieves the VAPID public key for client-side push notification setup.
+     * @return VAPID public key
+     */
     @Operation(summary = "Get VAPID public key")
     @GetMapping("/publicKey")
     public ResponseEntity<String> publicKey() {
         return ResponseEntity.ok(vapidPublicKey);
     }
 
+    /**
+     * Subscribes a user to push notifications.
+     * @param dto Push subscription details
+     * @param authentication Current user authentication
+     * @return Success or error response
+     */
     @Operation(summary = "Subscribe to push notifications")
     @PostMapping("/subscribe")
     public ResponseEntity<?> subscribe(
@@ -94,6 +113,11 @@ public class PushController {
         }
     }
 
+    /**
+     * Sends a test push notification to all subscriptions of the authenticated user.
+     * @param auth Current user authentication
+     * @return Number of notifications sent
+     */
     @Operation(summary = "Server-side push smoke test")
     @GetMapping("/test")
     public ResponseEntity<Map<String, Integer>> testPush(Authentication auth) {
@@ -115,46 +139,16 @@ public class PushController {
         return ResponseEntity.ok(Map.of("sent", subs.size()));
     }
 
+    /**
+     * Unsubscribes a user from push notifications.
+     * @param body Request body containing the endpoint to unsubscribe
+     * @param auth Current user authentication
+     * @return Empty response with no content
+     */
     @PostMapping("/unsubscribe")
     public ResponseEntity<Void> unsubscribe(
             @RequestBody Map<String, String> body, Authentication auth) {
         repository.findByEndpoint(body.get("endpoint")).ifPresent(repository::delete);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/test-cli")
-    public ResponseEntity<String> testCliPush() {
-        try {
-            PushNotifications pushNotification = new PushNotifications();
-            pushNotification.setEndpoint(
-                    "https://fcm.googleapis.com/fcm/send/fchvyGJBhik:APA91bFRNksx5F5Yz-JeI26RIDw9-_1UYmZE5rPh9xt1iVBuZgRXLxy6QQ1vTGzrFjIHUuJ39Su8kYpObPczXa4yU-Gc56Izwbqi_4PxTtRvkXdWTiSQ6XC_vS7tBjJHTzBhU8ZDZw-l");
-            String p256dh = "BCRtawoGeUy/3muV/Ylv6cwmVbWlaZ3YMD7iN7Bi6/+exTBsaDtQGkfsouZWtupHtnD1v1Vn24lZBuT3zaSMkhM=";
-            String auth = "Xy+YwWQhGi1FHSQdStuVoQ==";
-
-            // Replace any URL-safe characters with standard base64 characters
-            p256dh = p256dh.replace('-', '+').replace('_', '/');
-            auth = auth.replace('-', '+').replace('_', '/');
-
-            pushNotification.setP256dh(p256dh);
-            pushNotification.setAuth(auth);
-
-            webPushService.sendPush(pushNotification, "CLI Test", "Hello from CLI");
-
-            return ResponseEntity.ok("Test push sent with CLI values");
-        } catch (Exception e) {
-            logger.error("Test push failed: {}", e.getMessage());
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/debug-push")
-    public ResponseEntity<String> debugPush() {
-        try {
-            webPushService.debugPushLibrary();
-            return ResponseEntity.ok("Debug push sent");
-        } catch (Exception e) {
-            logger.error("Debug push failed: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
-        }
     }
 }

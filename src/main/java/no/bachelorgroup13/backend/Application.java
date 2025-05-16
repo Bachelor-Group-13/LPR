@@ -9,6 +9,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+/**
+ * Main application class for the parking system backend.
+ * Handles application startup and environment configuration.
+ */
 @SpringBootApplication
 @EnableConfigurationProperties(LicensePlateProperties.class)
 public class Application {

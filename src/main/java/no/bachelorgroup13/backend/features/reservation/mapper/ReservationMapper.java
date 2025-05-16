@@ -4,8 +4,18 @@ import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
 import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
 import org.springframework.stereotype.Component;
 
+/**
+ * Mapper for converting between Reservation entities and DTOs.
+ * Handles the transformation of reservation data between layers.
+ */
 @Component
 public class ReservationMapper {
+    /**
+     * Converts a Reservation entity to a ReservationDto.
+     * Includes user details if available.
+     * @param reservation The reservation entity to convert
+     * @return The corresponding DTO, or null if input is null
+     */
     public ReservationDto toDto(Reservation reservation) {
         if (reservation == null) {
             return null;
@@ -31,6 +41,12 @@ public class ReservationMapper {
         return reservationDto;
     }
 
+    /**
+     * Converts a ReservationDto to a Reservation entity.
+     * Handles anonymous reservations by setting userId to null.
+     * @param reservationDto The DTO to convert
+     * @return The corresponding entity, or null if input is null
+     */
     public Reservation toEntity(ReservationDto reservationDto) {
         if (reservationDto == null) {
             return null;

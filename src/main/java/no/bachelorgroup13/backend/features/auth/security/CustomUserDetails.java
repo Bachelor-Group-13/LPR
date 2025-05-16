@@ -8,6 +8,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+/**
+ * Custom implementation of Spring Security's UserDetails.
+ * Stores user authentication and authorization information.
+ */
 @Data
 public class CustomUserDetails implements UserDetails {
     private final UUID id;
@@ -16,6 +20,14 @@ public class CustomUserDetails implements UserDetails {
     private final boolean enabled;
     private final Collection<? extends GrantedAuthority> authorities;
 
+    /**
+     * Creates a new CustomUserDetails instance.
+     * @param id User's unique identifier
+     * @param username User's email/username
+     * @param password User's encrypted password
+     * @param enabled Whether the user account is enabled
+     * @param role User's role in the system
+     */
     public CustomUserDetails(
             UUID id, String username, String password, boolean enabled, Role role) {
         this.id = id;
@@ -38,21 +50,6 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         return username;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
     }
 
     @Override

@@ -5,6 +5,10 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * Data transfer object for JWT authentication responses.
+ * Contains user information and authentication tokens.
+ */
 @Data
 @AllArgsConstructor
 public class JwtResponse {

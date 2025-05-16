@@ -6,6 +6,10 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 import lombok.Data;
 
+/**
+ * Data transfer object for parking spot reservations.
+ * Contains all necessary information about a reservation including user and vehicle details.
+ */
 @Data
 public class ReservationDto {
     @Schema(description = "The ID of the reservation.")
