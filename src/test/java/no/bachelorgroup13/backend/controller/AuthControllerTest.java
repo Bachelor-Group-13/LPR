@@ -3,6 +3,7 @@ package no.bachelorgroup13.backend.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -84,11 +85,11 @@ class AuthControllerTest {
 
         String signupJson2 =
                 """
-                    {
-                        "username": "testuser",
-                        "email": ""
-                    }
-                """;
+                                {
+                                                                        "username": "testuser",
+                                                                        "email": ""
+                                                                    }
+                                                                """;
 
         mockMvc.perform(
                         post("/api/auth/signup")
@@ -99,7 +100,6 @@ class AuthControllerTest {
 
     @Test
     void testSignupAndLogin() throws Exception {
-        // First signup
         User testUser = createTestUser();
         when(authService.registerUser(any(SignupRequest.class))).thenReturn(null);
 
@@ -116,7 +116,6 @@ class AuthControllerTest {
                                 .content(objectMapper.writeValueAsString(signupRequest)))
                 .andExpect(status().isOk());
 
-        // Then login with the same user
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail(testUser.getEmail());
         loginRequest.setPassword(testUser.getPassword());
@@ -158,5 +157,15 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.token").value("dummyToken"))
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$.name").value(testUser.getName()));
+    }
+
+    @Test
+    void testLogout() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("user"))
+                .andExpect(cookie().maxAge("user", 0))
+                .andExpect(cookie().path("user", "/"))
+                .andExpect(cookie().httpOnly("user", true));
     }
 }
