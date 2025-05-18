@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import no.bachelorgroup13.backend.features.licenseplate.dto.PlateDto;
 import no.bachelorgroup13.backend.features.licenseplate.service.LicensePlateService;
 import org.springframework.http.MediaType;
@@ -58,7 +60,12 @@ public class LicensePlateController {
     /**
      * Response wrapper for license plate recognition results.
      */
+    @Setter
+    @Getter
     static class LicensePlatesResponse {
+        /**
+         *  Gets and sets the list of recognized license plates.
+         */
         private List<PlateDto> license_plates;
 
         /**
@@ -67,22 +74,6 @@ public class LicensePlateController {
          */
         public LicensePlatesResponse(List<PlateDto> plates) {
             this.license_plates = plates;
-        }
-
-        /**
-         * Gets the list of recognized license plates.
-         * @return List of license plates
-         */
-        public List<PlateDto> getLicense_plates() {
-            return license_plates;
-        }
-
-        /**
-         * Sets the list of recognized license plates.
-         * @param license_plates List of license plates
-         */
-        public void setLicense_plates(List<PlateDto> license_plates) {
-            this.license_plates = license_plates;
         }
     }
 }

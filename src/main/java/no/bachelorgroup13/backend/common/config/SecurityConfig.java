@@ -61,7 +61,7 @@ public class SecurityConfig {
     }
 
     /**
-     * Creates a BCrypt password encoder with strength of 10.
+     * Creates a BCrypt password encoder with a strength of 10.
      */
     @Bean
     public PasswordEncoder passwordEncoder() {

@@ -1,5 +1,6 @@
 package no.bachelorgroup13.backend.features.push.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.Security;
@@ -7,22 +8,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.jose4j.lang.JoseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
 import nl.martijndwars.webpush.Urgency;
 import no.bachelorgroup13.backend.features.push.entity.PushNotifications;
 import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.jose4j.lang.JoseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 /**
  * Service for sending web push notifications to subscribed users.
@@ -142,7 +139,7 @@ public class WebPushService {
         pushRepository.findAllByUserId(userId).forEach(sub -> sendPush(sub, title, body));
     }
 
-      /**
+    /**
      * Sends a notification to a user who has parked in a B-spot.
      * Notifies the user that they have parked someone in at a specific A-spot.
      * @param userName The name of the user who parked
@@ -155,7 +152,7 @@ public class WebPushService {
         sendNotificationToUser(userId, title, body);
     }
 
-     /**
+    /**
      * Sends a notification to a user who has been parked in at an A-spot.
      * Notifies the user that someone has parked them in.
      * @param userName The name of the user who parked them in
@@ -167,7 +164,7 @@ public class WebPushService {
         sendNotificationToUser(userId, title, body);
     }
 
- /**
+    /**
      * Sends a notification for a regular spot reservation.
      * Notifies the user that they have successfully reserved a parking spot.
      * @param spot The spot number that was reserved

@@ -8,7 +8,7 @@ import lombok.Data;
 
 /**
  * Data transfer object for parking spot reservations.
- * Contains all necessary information about a reservation including user and vehicle details.
+ * Contains all necessary information about a reservation, including user and vehicle details.
  */
 @Data
 public class ReservationDto {

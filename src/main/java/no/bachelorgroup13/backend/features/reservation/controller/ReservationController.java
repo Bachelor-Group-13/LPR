@@ -1,10 +1,17 @@
 package no.bachelorgroup13.backend.features.reservation.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
+import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
+import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
+import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,19 +25,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.WebPushService;
-import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
-import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
-import no.bachelorgroup13.backend.features.reservation.mapper.ReservationMapper;
-import no.bachelorgroup13.backend.features.reservation.service.ReservationService;
-import no.bachelorgroup13.backend.features.user.entity.User;
-import no.bachelorgroup13.backend.features.user.repository.UserRepository;
-
 /**
  * Controller for managing parking spot reservations.
  * Handles CRUD operations and notifications for reservations.
@@ -43,18 +37,7 @@ import no.bachelorgroup13.backend.features.user.repository.UserRepository;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final PushSubscriptionRepository pushRepository;
-    private final WebPushService pushService;
     private final ReservationMapper reservationMapper;
-    private final UserRepository userRepository;
-
-    /**
-     * Utility to look up a user's name
-     * @return Name of the user
-     */
-    private String getUserName(UUID userId) {
-        return userRepository.findById(userId).map(User::getName).orElse("someone");
-    }
 
     /**
      * Retrieves all reservations.
@@ -128,7 +111,7 @@ public class ReservationController {
                         .collect(Collectors.toList()));
     }
 
-   /**
+    /**
      * Creates a new reservation.
      * Sends push notifications for non-anonymous reservations.
      * @param dto The reservation data to create
@@ -150,7 +133,7 @@ public class ReservationController {
         }
     }
 
-     /**
+    /**
      * Updates an existing reservation.
      * Sends notifications if the updated reservation is for a B-spot with a license plate.
      * @param id The ID of the reservation to update
