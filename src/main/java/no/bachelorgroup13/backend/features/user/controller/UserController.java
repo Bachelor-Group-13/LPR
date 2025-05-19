@@ -14,7 +14,6 @@ import no.bachelorgroup13.backend.features.user.dto.UserDto;
 import no.bachelorgroup13.backend.features.user.entity.User;
 import no.bachelorgroup13.backend.features.user.mapper.UserMapper;
 import no.bachelorgroup13.backend.features.user.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -39,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
-    @Autowired private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Retrieves all users in the system.
@@ -83,15 +82,7 @@ public class UserController {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             System.out.println("User found: " + user);
-
-            UserDto userDto = new UserDto();
-            userDto.setId(user.getId());
-            userDto.setName(user.getName());
-            userDto.setEmail(user.getEmail());
-            userDto.setPhoneNumber(user.getPhoneNumber());
-            userDto.setLicensePlate(user.getLicensePlate());
-            userDto.setSecondLicensePlate(user.getSecondLicensePlate());
-            return ResponseEntity.ok(userDto);
+            return ResponseEntity.ok(userMapper.toDto(user));
         } else {
             Map<String, String> response = new HashMap<>();
             response.put("found", String.valueOf(false));
@@ -179,25 +170,14 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (authentication == null
-                || !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+                || !(authentication.getPrincipal()
+                        instanceof CustomUserDetails customUserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         return userService
-                .getUserById(userDetails.getId())
-                .map(
-                        user -> {
-                            UserDto userDto = new UserDto();
-                            userDto.setId(user.getId());
-                            userDto.setName(user.getName());
-                            userDto.setEmail(user.getEmail());
-                            userDto.setPhoneNumber(user.getPhoneNumber());
-                            userDto.setLicensePlate(user.getLicensePlate());
-                            userDto.setSecondLicensePlate(user.getSecondLicensePlate());
-                            userDto.setRole(user.getRole());
-                            return ResponseEntity.ok(userDto);
-                        })
+                .getUserById(customUserDetails.getId())
+                .map(user -> ResponseEntity.ok(userMapper.toDto(user)))
                 .orElse(ResponseEntity.notFound().build());
     }
 }
