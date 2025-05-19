@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 import no.bachelorgroup13.backend.features.auth.security.JwtTokenProvider;
 import no.bachelorgroup13.backend.features.push.repository.PushSubscriptionRepository;
-import no.bachelorgroup13.backend.features.push.service.PushServiceWrapper;
+import no.bachelorgroup13.backend.features.push.service.WebPushService;
 import no.bachelorgroup13.backend.features.reservation.controller.ReservationController;
 import no.bachelorgroup13.backend.features.reservation.dto.ReservationDto;
 import no.bachelorgroup13.backend.features.reservation.entity.Reservation;
@@ -41,7 +41,7 @@ class ReservationControllerTest {
     @MockitoBean
     private PushSubscriptionRepository pushRepository;
     @MockitoBean
-    private PushServiceWrapper pushService;
+    private WebPushService pushService;
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
     @MockitoBean
