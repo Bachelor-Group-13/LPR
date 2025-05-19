@@ -68,8 +68,11 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtConfig.getExpiration());
 
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new RuntimeException("User not found"));
+
         return Jwts.builder()
                 .setSubject(username)
+                .claim("id", user.getId().toString())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSigningKey())
@@ -109,7 +112,7 @@ public class JwtTokenProvider {
     }
 
     /**
-     * Creates authentication object from JWT token.
+     * Creates an authentication object from JWT token.
      * @param token JWT token string
      * @return Authentication object
      */
