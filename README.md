@@ -33,6 +33,11 @@ This is the backend part of the Inneparkert system, built with Java and Spring B
 - **Build Tool**: Maven
 - **Security**: Spring Security, JWT
 
+## API Documentation
+
+Swagger UI is available for exploring and testing the REST API.
+[Access Swagger Documentation](https://129.241.152.242.nip.io/swagger-ui/index.html)
+
 ### Project Structure
 
 ```
