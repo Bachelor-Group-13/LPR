@@ -28,24 +28,16 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(ReservationController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class ReservationControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private ReservationService reservationService;
-    @MockitoBean
-    private ReservationMapper reservationMapper;
-    @MockitoBean
-    private PushSubscriptionRepository pushRepository;
-    @MockitoBean
-    private WebPushService pushService;
-    @MockitoBean
-    private JwtTokenProvider jwtTokenProvider;
-    @MockitoBean
-    private AuthenticationManager authenticationManager;
+    @MockitoBean private ReservationService reservationService;
+    @MockitoBean private ReservationMapper reservationMapper;
+    @MockitoBean private PushSubscriptionRepository pushRepository;
+    @MockitoBean private WebPushService pushService;
+    @MockitoBean private JwtTokenProvider jwtTokenProvider;
+    @MockitoBean private AuthenticationManager authenticationManager;
 
     @Test
     void testCreateReservation_returnsCreated() throws Exception {
@@ -70,9 +62,9 @@ class ReservationControllerTest {
         when(reservationService.hasActiveReservation(any())).thenReturn(false);
 
         mockMvc.perform(
-                post("/api/reservations")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
+                        post("/api/reservations")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated());
     }
 }
