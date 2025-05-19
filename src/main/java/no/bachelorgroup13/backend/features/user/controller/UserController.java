@@ -105,7 +105,7 @@ public class UserController {
     /**
      * Creates a new user.
      * @param userDto The user data to create
-     * @return Created user as DTO with 201 status
+     * @return Created user as DTO with status 201
      */
     @Operation(summary = "Create a new user")
     @PostMapping

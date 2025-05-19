@@ -72,7 +72,7 @@ public class UserService {
      * Preserves existing values for null fields and handles password encryption.
      * @param updatedUser The updated user data
      * @return The updated user
-     * @throws RuntimeException if user is not found
+     * @throws RuntimeException if a user is not found
      */
     public User updateUser(User updatedUser) {
         return userRepository
@@ -83,9 +83,7 @@ public class UserService {
                                 existingUser.setLicensePlate(updatedUser.getLicensePlate());
                             }
 
-                            if (updatedUser.getSecondLicensePlate() != null
-                                    || updatedUser.getSecondLicensePlate() == null
-                                            && updatedUser.getLicensePlate() != null) {
+                            if (updatedUser.getSecondLicensePlate() != null || updatedUser.getLicensePlate() != null) {
                                 existingUser.setSecondLicensePlate(
                                         updatedUser.getSecondLicensePlate());
                             }
@@ -106,8 +104,6 @@ public class UserService {
                                     && !updatedUser.getPassword().isBlank()) {
                                 existingUser.setPassword(
                                         passwordEncoder.encode(updatedUser.getPassword()));
-                            } else {
-                                existingUser.setPassword(updatedUser.getPassword());
                             }
 
                             if (updatedUser.getRole() != null) {
