@@ -18,7 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Filter for JWT authentication.
- * Validates JWT tokens from cookies and sets up security context.
+ * Validates JWT tokens from cookies and sets up a security context.
  */
 @Component
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider tokenProvider;
 
     /**
-     * Processes each request to validate JWT token and set up authentication.
+     * Processes each request to validate a JWT token and set up authentication.
      * @param request HTTP request
      * @param response HTTP response
      * @param filterChain Filter chain

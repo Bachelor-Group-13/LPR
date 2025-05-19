@@ -68,7 +68,10 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtConfig.getExpiration());
 
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new RuntimeException("User not found"));
+        User user =
+                userRepository
+                        .findByEmail(username)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
         return Jwts.builder()
                 .setSubject(username)

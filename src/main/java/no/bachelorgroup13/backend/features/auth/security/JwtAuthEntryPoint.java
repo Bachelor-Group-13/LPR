@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Handles unauthorized authentication attempts.
- * Returns a JSON response with error message when authentication fails.
+ * Returns a JSON response with an error message when authentication fails.
  */
 @Component
 public class JwtAuthEntryPoint implements AuthenticationEntryPoint {

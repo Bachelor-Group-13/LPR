@@ -130,9 +130,7 @@ public class UserController {
                                 user.setName(existingUser.getName());
                             }
                             if (user.getPassword() == null || user.getPassword().isBlank()) {
-                                user.setPassword(existingUser.getPassword());
-                            } else {
-                                user.setPassword(passwordEncoder.encode(user.getPassword()));
+                                user.setPassword(null);
                             }
 
                             user.setRole(existingUser.getRole());

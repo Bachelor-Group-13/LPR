@@ -83,8 +83,7 @@ public class UserService {
                                 existingUser.setLicensePlate(updatedUser.getLicensePlate());
                             }
 
-                            if (updatedUser.getSecondLicensePlate() != null
-                                    || updatedUser.getLicensePlate() != null) {
+                            if (updatedUser.getSecondLicensePlate() != null) {
                                 existingUser.setSecondLicensePlate(
                                         updatedUser.getSecondLicensePlate());
                             }
